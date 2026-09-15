@@ -1,5 +1,7 @@
 #pragma once
 
+#include <immintrin.h>
+#include <cstdint>
 #include <v4q128/core/storage.hpp>
 
 #if defined(_MSC_VER)
@@ -14,20 +16,13 @@ namespace v4q128 {
 
 /**
  * @brief Transposes two 256-bit AVX2 vectors from AoS format [loN, hiN] into Dual-SoA registers.
- * 
- * Rebalances execution port pressure on AVX2 pipelines by interleaving 128-bit 
- * block permutations with 64-bit unpacks, bypassing Port 5 throughput bottlenecks.
  */
 [[nodiscard]] V4Q128_INLINE v4q128 transpose_aos_to_soa(__m256i raw0, __m256i raw1) noexcept {
-    // 1. Swap 128-bit blocks across vectors
-    // 0x20: extracts raw0[127:0] and raw1[127:0]  -> [lo0, hi0, lo2, hi2]
-    // 0x31: extracts raw0[255:128] and raw1[255:128] -> [lo1, hi1, lo3, hi3]
     __m256i t0 = _mm256_permute2x128_si256(raw0, raw1, 0x20);
     __m256i t1 = _mm256_permute2x128_si256(raw0, raw1, 0x31);
 
-    // 2. Interleave 64-bit limbs across execution ports into final SoA registers
-    __m256i lo_soa = _mm256_unpacklo_epi64(t0, t1); // [lo0, lo1, lo2, lo3]
-    __m256i hi_soa = _mm256_unpackhi_epi64(t0, t1); // [hi0, hi1, hi2, hi3]
+    __m256i lo_soa = _mm256_unpacklo_epi64(t0, t1);
+    __m256i hi_soa = _mm256_unpackhi_epi64(t0, t1);
 
     return v4q128(lo_soa, hi_soa);
 }
@@ -36,13 +31,11 @@ namespace v4q128 {
  * @brief Transposes a Dual-SoA v4q128 vector back into AoS registers for memory storage.
  */
 V4Q128_INLINE void transpose_soa_to_aos(v4q128 vec, __m256i& out_raw0, __m256i& out_raw1) noexcept {
-    // 1. Interleave 64-bit limbs across SoA registers
-    __m256i u_lo = _mm256_unpacklo_epi64(vec.lo, vec.hi); // [lo0, hi0, lo2, hi2]
-    __m256i u_hi = _mm256_unpackhi_epi64(vec.lo, vec.hi); // [lo1, hi1, lo3, hi3]
+    __m256i u_lo = _mm256_unpacklo_epi64(vec.lo, vec.hi);
+    __m256i u_hi = _mm256_unpackhi_epi64(vec.lo, vec.hi);
 
-    // 2. Re-assemble 128-bit memory blocks
-    out_raw0 = _mm256_permute2x128_si256(u_lo, u_hi, 0x20); // [lo0, hi0, lo1, hi1]
-    out_raw1 = _mm256_permute2x128_si256(u_lo, u_hi, 0x31); // [lo2, hi2, lo3, hi3]
+    out_raw0 = _mm256_permute2x128_si256(u_lo, u_hi, 0x20);
+    out_raw1 = _mm256_permute2x128_si256(u_lo, u_hi, 0x31);
 }
 
 /**
@@ -88,7 +81,7 @@ V4Q128_INLINE void store_unaligned(void* ptr, v4q128 vec) noexcept {
 }
 
 /**
- * @brief Non-temporal store (bypasses CPU caches directly to system RAM for large array streams).
+ * @brief Non-temporal store (bypasses CPU caches directly to system RAM).
  */
 V4Q128_INLINE void store_stream(void* ptr, v4q128 vec) noexcept {
     auto* base = static_cast<__m256i*>(ptr);
