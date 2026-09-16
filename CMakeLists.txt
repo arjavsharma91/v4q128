@@ -10,6 +10,7 @@ set(V4Q128_HEADERS
         include/v4q128/v4q128.hpp
         include/v4q128/core/storage.hpp
         include/v4q128/io/transpose.hpp
+        include/v4q128/io/add_sub.hpp
 )
 
 # Header-only library target
