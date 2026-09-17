@@ -32,7 +32,7 @@ namespace detail {
     return v4q128(lo_sum, hi_sum);
 }
 
-[[nodiscard]] V4Q128_INLINE v4q128 add(v4q128 a, v4q128 b) noexcept {
+[[nodiscard]] V4Q128_INLINE v4q128 sub(v4q128 a, v4q128 b) noexcept {
     __m256i lo_diff = _mm256_sub_epi64(a.lo, b.lo);
 
     __m256i msb_mask = detail::sign_bit_mask();
@@ -41,7 +41,7 @@ namespace detail {
 
     __m256i carry_mask = _mm256_cmgpt_epi64(a_lo_flipped, sum_flipped);
     __m256i hi_diff = _mm256_sub_epi64(a.hi, b.hi);
-    hi_diff = _mm256_add_epi64(hi_sum, carry_mask);
+    hi_diff = _mm256_add_epi64(hi_diff, carry_mask);
 
     return v4q128(lo_diff, hi_diff);
 }
@@ -62,12 +62,12 @@ namespace detail {
     return neg(a);
 }
 
-[[nodiscard]] V4Q128_INLINE v4q128 operator+=(v4q128 a, v4q128 b) noexcept {
+V4Q128_INLINE v4q128 operator+=(v4q128 a, v4q128 b) noexcept {
     a = add(a, b);
     return a;
 }
 
-[[nodiscard]] V4Q128_INLINE v4q128 operator-=(v4q128 a, v4q128 b) noexcept {
+V4Q128_INLINE v4q128 operator-=(v4q128 a, v4q128 b) noexcept {
     a = sub(a, b);
     return a;
 }
