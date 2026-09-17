@@ -62,12 +62,12 @@ namespace detail {
     return neg(a);
 }
 
-V4Q128_INLINE v4q128 operator+=(v4q128& a, v4q128 b) noexcept {
+V4Q128_INLINE v4q128& operator+=(v4q128& a, v4q128 b) noexcept {
     a = add(a, b);
     return a;
 }
 
-V4Q128_INLINE v4q128 operator-=(v4q128& a, v4q128 b) noexcept {
+V4Q128_INLINE v4q128& operator-=(v4q128& a, v4q128 b) noexcept {
     a = sub(a, b);
     return a;
 }
