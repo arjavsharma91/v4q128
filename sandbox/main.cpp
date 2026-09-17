@@ -32,6 +32,9 @@ int main() {
         }
     }
 
+    v4q128::v4q128 vec_add_test = v4q128::load_aligned(input_data);
+    
+
     if (passed) {
         std::cout << "Phase 1 Matrix Transpose Test Passed!\n";
         std::cout << "Lane 0: lo=0x" << std::hex << output_data[0].lo
