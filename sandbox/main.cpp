@@ -2,48 +2,20 @@
 #include <v4q128/core/storage.hpp>
 #include <v4q128/io/transpose.hpp>
 #include <iostream>
-
-struct Q64_64 {
-    uint64_t lo;
-    int64_t hi;
-};
+#include <csdtint>
+#include <iomanip>
 
 int main() {
-    // 4 sample Q64.64 numbers in AoS RAM format
-    alignas(32) Q64_64 input_data[4] = {
-        { 0x1111111111111111ULL, 100 },
-        { 0x2222222222222222ULL, 200 },
-        { 0x3333333333333333ULL, 300 },
-        { 0x4444444444444444ULL, 400 }
-    };
+    using namespace v4q128;
 
-    // 1. Load AoS data from RAM -> Transpose to Dual-SoA Registers
-    v4q128::v4q128 vec = v4q128::load_aligned(input_data);
+    v4q128 a_carry = v4q128::set1(0xFFFFFFFFFFFFFFFEULL, 10);
+    v4q128 b_carry = v4q128::set1(0x0000000000000002ULL, 5);
+    v4q128 sum = a_carry + b_carry
 
-    // 2. Store Dual-SoA Registers -> Transpose back to AoS RAM
-    alignas(32) Q64_64 output_data[4];
-    v4q128::store_aligned(output_data, vec);
+    print_v4q128("ADDITION WITH CARRY, expected: hi=16, lo=0x0000000000000000)", sum);
 
-    // 3. Assert bit-exact identity
-    bool passed = true;
-    for (int i = 0; i < 4; ++i) {
-        if (input_data[i].lo != output_data[i].lo || input_data[i].hi != output_data[i].hi) {
-            passed = false;
-        }
-    }
+    v4q128 a_borrow = v4q128::set1(0x0000000000000000ULL, 20);
+    v4q128 b_borrow = v4q128::set1(0x0000000000000001ULL, 5);
+    v4q128 diff = a_borrow - b_borrow;
 
-    v4q128::v4q128 vec_add_test = v4q128::load_aligned(input_data);
-    
-
-    if (passed) {
-        std::cout << "Phase 1 Matrix Transpose Test Passed!\n";
-        std::cout << "Lane 0: lo=0x" << std::hex << output_data[0].lo
-                  << std::dec << ", hi=" << output_data[0].hi << "\n";
-        std::cout << "Lane 3: lo=0x" << std::hex << output_data[3].lo
-                  << std::dec << ", hi=" << output_data[3].hi << "\n";
-    } else {
-        std::cout << "ERROR: Transpose mismatch!\n";
-    }
-
-    return 0;
-}
+    print_v4q128("SUBTRACTION WITH BORROW, expected: hi = 14 lo = 0xFFFFFFFFFFFFFFFF", diff);
