@@ -25,7 +25,7 @@ namespace detail {
     __m256i a_lo_flipped = _mm256_xor_si256(a.lo, msb_mask);
     __m256i sum_flipped = _mm256_xor_si256(lo_sum, msb_mask);
 
-    __m256i carry_mask = _mm256_cmgpt_epi64(a_lo_flipped, sum_flipped);
+    __m256i carry_mask = _mm256_cmpgt_epi64(a_lo_flipped, sum_flipped);
     __m256i hi_sum = _mm256_add_epi64(a.hi, b.hi);
     hi_sum = _mm256_sub_epi64(hi_sum, carry_mask);
 
@@ -39,7 +39,7 @@ namespace detail {
     __m256i a_lo_flipped = _mm256_xor_si256(a.lo, msb_mask);
     __m256i b_lo_flipped = _mm256_xor_si256(b.lo, msb_mask);
 
-    __m256i borrow_mask = _mm256_cmgpt_epi64(b_lo_flipped, a_lo_flipped);
+    __m256i borrow_mask = _mm256_cmpgt_epi64(b_lo_flipped, a_lo_flipped);
     __m256i hi_diff = _mm256_sub_epi64(a.hi, b.hi);
     hi_diff = _mm256_add_epi64(hi_diff, borrow_mask);
 
@@ -62,12 +62,12 @@ namespace detail {
     return neg(a);
 }
 
-V4Q128_INLINE v4q128 operator+=(v4q128 a, v4q128 b) noexcept {
+V4Q128_INLINE v4q128 operator+=(v4q128& a, v4q128 b) noexcept {
     a = add(a, b);
     return a;
 }
 
-V4Q128_INLINE v4q128 operator-=(v4q128 a, v4q128 b) noexcept {
+V4Q128_INLINE v4q128 operator-=(v4q128& a, v4q128 b) noexcept {
     a = sub(a, b);
     return a;
 }
