@@ -1,4 +1,4 @@
-#pragma <once>
+#pragma once
 
 #include <immintrin.h>
 #include <v4q128/core/storage.hpp>
@@ -44,15 +44,15 @@ namespace detail {
 }
 
 [[nodiscard]] V4Q128_INLINE __m256i less_than_or_equal(v4q128 a, v4q128 b) noexcept {
-    return _mm256_andnot_si256(greater_than(a, b), _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFULL);
+    return _mm256_andnot_si256(greater_than(a, b), _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFULL));
 }
 
 [[nodiscard]] V4Q128_INLINE __m256i not_equal_to(v4q128 a, v4q128 b) noexcept {
-    return _mm256_andnot_si256(equal_to(a, b), _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFULL);
+    return _mm256_andnot_si256(equal(a, b), _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFULL));
 }
 
 [[nodiscard]] V4Q128_INLINE __m256i greater_than_or_equal(v4q128 a, v4q128 b) noexcept {
-    return _mm256_andnot_si256(less_than(a, b), _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFULL);
+    return _mm256_andnot_si256(less_than(a, b), _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFULL));
 }
 
 } // namespace
