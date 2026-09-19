@@ -75,6 +75,10 @@ namespace detail {
     return equal(a, b);
 }
 
+[[nodiscard]] V4Q128_INLINE __m256i operator!=(v4q128 a, v4q128 b) noexcept {
+    return not_equal(a, b);
+}
+
 } // namespace
 
 #undef V4Q128_INLINE
