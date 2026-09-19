@@ -55,6 +55,26 @@ namespace detail {
     return _mm256_andnot_si256(less_than(a, b), _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFULL));
 }
 
+[[nodiscard]] V4Q128_INLINE __m256i operator>(v4q128 a, v4q128 b) noexcept {
+    return greater_than(a, b);
+}
+
+[[nodiscard]] V4Q128_INLINE __m256i operator<(v4q128 a, v4q128 b) noexcept {
+    return less_than(a, b);
+}
+
+[[nodiscard]] V4Q128_INLINE __m256i operator>=(v4q128 a, v4q128 b) noexcept {
+    return greater_than_or_equal(a, b);
+}
+
+[[nodiscard]] V4Q128_INLINE __m256i operator<=(v4q128 a, v4q128 b) noexcept {
+    return less_than_or_equal(a, b);
+}
+
+[[nodiscard]] V4Q128_INLINE __m256i operator==(v4q128 a, v4q128 b) noexcept {
+    return equal(a, b);
+}
+
 } // namespace
 
 #undef V4Q128_INLINE
