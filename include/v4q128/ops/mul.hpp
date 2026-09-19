@@ -29,8 +29,13 @@ namespace v4q128 {
 
     __m256i carryb = _mm256_and_si256(sign_mask_b, _mm256_cmpeq_epi64(b.lo, _mm256_setzero_si256()));
     __m256i b_hi_abs = _mm256_sub_epi64(b_hi_inv, carryb);
-    
-    
 
-    
+    __m256i a0 = a_lo_abs;
+    __m256i a1 = _mm256_srli_epi64(a_lo_abs, 32);
+    __m256i a2 = a_hi_abs;
+    __m256i a3 = _mm256_srli_epi64(a_hi_abs, 32);
 
+    __m256i b0 = b_lo_abs;
+    __m256i b1 = _mm256_srli_epi64(b_lo_abs, 32);
+    __m256i b2 = b_hi_abs;
+    __m256i b3 = _mm256_srli_epi64(b_hi_abs, 32);
