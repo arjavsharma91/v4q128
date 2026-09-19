@@ -1,7 +1,7 @@
 #pragma once
 
 #if defined (_MSC_VER)
-    #define V4Q128_INLINE __forced_inline
+    #define V4Q128_INLINE __force_inline
 #elif defined (__GNUC__) || defined (__clang__)
     #define V4Q128_INLINE __attribute__((always_inline))
 #else
@@ -27,7 +27,7 @@ namespace v4q128 {
     __m256i b_lo_inv = _mm256_xor_si256(b.lo, sign_mask_b);
     __m256i b_lo_abs = _mm256_sub_epi64(b_lo_inv, sign_mask_b);
 
-    __m256i carryb = _mm256_and_si256(sign_mask_b, _mm256_cmpeq_epi64(a.lo, _mm256_setzero_si256()));
+    __m256i carryb = _mm256_and_si256(sign_mask_b, _mm256_cmpeq_epi64(b.lo, _mm256_setzero_si256()));
     __m256i b_hi_abs = _mm256_sub_epi64(b_hi_inv, carryb);
     
     
