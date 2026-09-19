@@ -1,4 +1,4 @@
-#pragma <once>
+#pragma once
 
 #if defined (_MSC_VER)
     #define V4Q128_INLINE __forced_inline
