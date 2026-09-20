@@ -43,9 +43,7 @@ V4Q128_INLINE void transpose_soa_to_aos(v4q128 vec, __m256i& out_raw0, __m256i& 
     return transpose_aos_to_soa(raw0, raw1);
 }
 
-/**
- * @brief Load 4 Q64.64 numbers from unaligned memory into Dual-SoA registers.
- */
+
 [[nodiscard]] V4Q128_INLINE v4q128 load_unaligned(const void* ptr) noexcept {
     const auto* base = static_cast<const __m256i*>(ptr);
     __m256i raw0 = _mm256_loadu_si256(base);
