@@ -25,9 +25,6 @@ namespace v4q128 {
     return v4q128(lo_soa, hi_soa);
 }
 
-/**
- * @brief Transposes a Dual-SoA v4q128 vector back into AoS registers for memory storage.
- */
 V4Q128_INLINE void transpose_soa_to_aos(v4q128 vec, __m256i& out_raw0, __m256i& out_raw1) noexcept {
     __m256i u_lo = _mm256_unpacklo_epi64(vec.lo, vec.hi);
     __m256i u_hi = _mm256_unpackhi_epi64(vec.lo, vec.hi);
