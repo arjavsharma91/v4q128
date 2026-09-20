@@ -67,9 +67,7 @@ V4Q128_INLINE void store_unaligned(void* ptr, v4q128 vec) noexcept {
     _mm256_storeu_si256(base + 1, raw1);
 }
 
-/**
- * @brief Non-temporal store (bypasses CPU caches directly to system RAM).
- */
+
 V4Q128_INLINE void store_stream(void* ptr, v4q128 vec) noexcept {
     auto* base = static_cast<__m256i*>(ptr);
     __m256i raw0, raw1;
@@ -78,6 +76,6 @@ V4Q128_INLINE void store_stream(void* ptr, v4q128 vec) noexcept {
     _mm256_stream_si256(base + 1, raw1);
 }
 
-} // namespace v4q128
+} // namespace
 
 #undef V4Q128_INLINE
