@@ -14,9 +14,7 @@
 
 namespace v4q128 {
 
-/**
- * @brief Transposes two 256-bit AVX2 vectors from AoS format [loN, hiN] into Dual-SoA registers.
- */
+
 [[nodiscard]] V4Q128_INLINE v4q128 transpose_aos_to_soa(__m256i raw0, __m256i raw1) noexcept {
     __m256i t0 = _mm256_permute2x128_si256(raw0, raw1, 0x20);
     __m256i t1 = _mm256_permute2x128_si256(raw0, raw1, 0x31);
