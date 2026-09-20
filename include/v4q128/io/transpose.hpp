@@ -49,9 +49,7 @@ V4Q128_INLINE void transpose_soa_to_aos(v4q128 vec, __m256i& out_raw0, __m256i& 
     return transpose_aos_to_soa(raw0, raw1);
 }
 
-/**
- * @brief Store 4 Dual-SoA Q64.64 numbers to 32-byte aligned memory in AoS layout.
- */
+
 V4Q128_INLINE void store_aligned(void* ptr, v4q128 vec) noexcept {
     auto* base = static_cast<__m256i*>(ptr);
     __m256i raw0, raw1;
@@ -60,9 +58,7 @@ V4Q128_INLINE void store_aligned(void* ptr, v4q128 vec) noexcept {
     _mm256_store_si256(base + 1, raw1);
 }
 
-/**
- * @brief Store 4 Dual-SoA Q64.64 numbers to unaligned memory in AoS layout.
- */
+
 V4Q128_INLINE void store_unaligned(void* ptr, v4q128 vec) noexcept {
     auto* base = static_cast<__m256i*>(ptr);
     __m256i raw0, raw1;
