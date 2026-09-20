@@ -65,6 +65,22 @@ namespace v4q128 {
     __m256i sum_pair1 = _mm256_add_epi64(a0_b2, a1_b1);
     __m256i sum_pair2 = _mm256_add_epi64(a2_b0, res_lo_base);
     __m256i res_lo = _mm256_add_epi64(sum_pair1, sum_pair2);
+
+    // step 3
+    __m256i a0_b3 = _mm256_mul_epu32(a0, b3);
+    __m256i a1_b2 = _mm256_mul_epu32(a1, b2);
+    __m256i a2_b1 = _mm256_mul_epu32(a2, b1);
+    __m256i a3_b0 = _mm256_mul_epu32(a3, b0);
+    
+    __m256i sum_pair_1_3 = _mm256_add_epi64(a0_b3, a1_b2);
+    __m256i sum_pair_2_3 = _mm256_add_epi64(a2_b1, a3_b0);
+    __m256i sum_96 = _mm256_add_epi64(sum_pair_1_3, sum_pair_2_3);
+
+    __m256i sum_96_bl = _mm256_slli_epi64(sum_96_blended, 32);
+    res_lo = _mm256_add_epi64(sum_96_bl, res_lo);
+    
+
+    
     
     
     
