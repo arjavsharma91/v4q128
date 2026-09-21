@@ -50,7 +50,7 @@ namespace v4q128 {
     __m256i a0_b1_32 = _mm256_blend_epi32(a0_b1, zero, 0xAA);
     __m256i a1_b0_32 = _mm256_blend_epi32(a1_b0, zero, 0xAA);
     
-    __m256i sum_32 = _mm256_add_epi64(a0_b0_align, _mm256_add_epi64(a0_b1_32, a1_b0_32));
+    __m256i sum_32 = _mm256_add_epi64(a0b0_align, _mm256_add_epi64(a0_b1_32, a1_b0_32));
     __m256i bit_64_carry = _mm256_srli_epi64(sum_32, 32);
 
     // step 2
@@ -71,19 +71,43 @@ namespace v4q128 {
     __m256i a1_b2 = _mm256_mul_epu32(a1, b2);
     __m256i a2_b1 = _mm256_mul_epu32(a2, b1);
     __m256i a3_b0 = _mm256_mul_epu32(a3, b0);
-    
+
+    // kinda step 4
+    __m256i a1_b3 = _mm256_mul_epu32(a1, b3);
+    __m256i a2_b2 = _mm256_mul_epu32(a2, b2);
+    __m256i a3_b1 = _mm256_mul_epu32(a3, b1);
+
+    //step 3 again
     __m256i sum_pair_1_3 = _mm256_add_epi64(a0_b3, a1_b2);
     __m256i sum_pair_2_3 = _mm256_add_epi64(a2_b1, a3_b0);
     __m256i sum_96 = _mm256_add_epi64(sum_pair_1_3, sum_pair_2_3);
 
-    __m256i sum_96_bl = _mm256_slli_epi64(sum_96_blended, 32);
+    __m256i sum_96_bl = _mm256_slli_epi64(sum_96, 32);
     res_lo = _mm256_add_epi64(sum_96_bl, res_lo);
-    
 
+    // step 4
+    __m256i sum_96_shifted = _mm256_srli_epi64(sum_96, 32);
     
-    
-    
-    
-    
+    __m256i a2_b3 = _mm256_mul_epu32(a2, b3);
+    __m256i a3_b2 = _mm256_mul_epu32(a3, b2);
 
+    __m256i sum_pair_1_4 = _mm256_add_epi64(sum_96_shifted, a1_b3);
+    __m256i sum_pair_2_4 = _mm256_add_epi64(a2_b2, a3_b1);
+
+    __m256i sum_160 = _mm256_add_epi64(a2_b3, a3_b2);
+    __m256i sum_160_shifted = _mm256_slli_epi64(sum_160, 32);
+    __m256i sum_pair_3_4 = _mm256_add_epi64(sum_pair_2_4, sum_160_shifted);
+    __m256i res_hi = _mm256_add_epi64(sum_pair_3_4, sum_pair_1_4);
+
+    // sign reconstruction
+    __m256i res_lo_inv = _mm256_xor_si256(res_lo, sign_mask);
+    __m256i res_lo_final = _mm256_sub_epi64(res_lo_inv, sign_mask);
+
+    __m256i res_hi_inv = _mm256_xor_si256(res_hi, sign_mask);
+    __m256i carry_res = _mm256_and_si256(res_hi_inv, _mm256_cmpeq_epi64(res_lo, zero));
+    __m256i res_hi_final = _mm256_sub_epi64(res_hi_inv, carry_res);
+
+    return v4q128(res_lo_final, res_hi_final);
+} 
+} // namespace
     
