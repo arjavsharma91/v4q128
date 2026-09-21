@@ -8,3 +8,5 @@
 
 // Addition and subtraction
 #include <v4q128/ops/add_sub.hpp>
+#include <v4q128/ops/cmp.hpp>
+#include <v4q128/ops/mul.hpp>
