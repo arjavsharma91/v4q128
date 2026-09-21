@@ -76,7 +76,7 @@ namespace detail {
 }
 
 [[nodiscard]] V4Q128_INLINE __m256i operator!=(v4q128 a, v4q128 b) noexcept {
-    return not_equal(a, b);
+    return not_equal_to(a, b);
 }
 
 } // namespace
