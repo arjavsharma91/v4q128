@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cstdint>
 #include <immintrin.h>
-#include <include/v4q128/v4q128.hpp>
+#include <v4q128/v4q128.hpp>
 
 using namespace v4q128;
 
