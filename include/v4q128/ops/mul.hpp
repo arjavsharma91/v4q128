@@ -104,7 +104,7 @@ namespace v4q128 {
     __m256i res_lo_final = _mm256_sub_epi64(res_lo_inv, sign_mask);
 
     __m256i res_hi_inv = _mm256_xor_si256(res_hi, sign_mask);
-    __m256i carry_res = _mm256_and_si256(res_hi_inv, _mm256_cmpeq_epi64(res_lo, zero));
+    __m256i carry_res = _mm256_and_si256(sign_mask, _mm256_cmpeq_epi64(res_lo, zero));
     __m256i res_hi_final = _mm256_sub_epi64(res_hi_inv, carry_res);
 
     return v4q128(res_lo_final, res_hi_final);
