@@ -13,8 +13,8 @@ set(V4Q128_HEADERS
     include/v4q128/v4q128.hpp
     include/v4q128/core/storage.hpp
     include/v4q128/io/transpose.hpp
-    include/v4q128/io/add_sub.hpp
-    include/v4q128/io/cmp.hpp
+    include/v4q128/ops/add_sub.hpp
+    include/v4q128/ops/cmp.hpp
     include/v4q128/ops/mul.hpp
 )
 
