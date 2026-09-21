@@ -8,22 +8,22 @@ on:
 
 jobs:
   test-multiplication:
-    name: Build & Stress Test (GCC / Clang)
+    name: Build & Stress Test
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        compiler: [g++-12, clang++-15]
+        compiler: [g++, clang++]
         build_type: [Release]
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Compiler Toolchain
+      - name: Install Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake build-essential
+          sudo apt-get install -y cmake build-essential clang
 
       - name: Configure CMake
         run: |
@@ -35,4 +35,4 @@ jobs:
         run: cmake --build build --config ${{ matrix.build_type }}
 
       - name: Run Edge-Case & Stress Tests
-        run: ./build/test_mul
+        run: ctest --test-dir build --output-on-failure
