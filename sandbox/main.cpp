@@ -2,7 +2,7 @@
 #include <v4q128/core/storage.hpp>
 #include <v4q128/io/transpose.hpp>
 #include <iostream>
-#include <csdtint>
+#include <cstdint>
 #include <iomanip>
 
 void print_v4q128(const char* title, v4q128 v) {
