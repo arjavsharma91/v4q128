@@ -14,7 +14,7 @@
 namespace v4q128 {
 
 [[nodiscard]] V4Q128_INLINE v4q128 mul(v4q128 a, v4q128 b) noexcept {
-    // 1. Extract 32-bit limbs across all 4 SIMD lanes
+    // extract limbs (32 bits)
     const __m256i a0 = a.lo;
     const __m256i a1 = _mm256_srli_epi64(a.lo, 32);
     const __m256i a2 = a.hi;
@@ -25,7 +25,7 @@ namespace v4q128 {
     const __m256i b2 = b.hi;
     const __m256i b3 = _mm256_srli_epi64(b.hi, 32);
 
-    // 2. Compute 15 32x32 -> 64-bit cross products (a3*b3 is omitted)
+    // compute the 16 cross products (except for a3b3 because its useless)
     const __m256i p00 = _mm256_mul_epu32(a0, b0);
     const __m256i p01 = _mm256_mul_epu32(a0, b1);
     const __m256i p10 = _mm256_mul_epu32(a1, b0);
@@ -44,15 +44,15 @@ namespace v4q128 {
 
     const __m256i mask32 = _mm256_set1_epi64x(0x00000000FFFFFFFFULL);
 
-    // 3. Accumulate cross products by 32-bit slices to prevent 64-bit overflow
+    // accumulate in 32 bit slices to prevent 64 bit overflow
 
-    // --- Weight 2^32 ---
+    // 2^32
     const __m256i p01_lo = _mm256_and_si256(p01, mask32);
     const __m256i p10_lo = _mm256_and_si256(p10, mask32);
     const __m256i t32 = _mm256_add_epi64(_mm256_srli_epi64(p00, 32), _mm256_add_epi64(p01_lo, p10_lo));
     const __m256i c64 = _mm256_srli_epi64(t32, 32);
 
-    // --- Weight 2^64 (bits 64..95 of result) ---
+    // 2^64
     const __m256i p01_hi = _mm256_srli_epi64(p01, 32);
     const __m256i p10_hi = _mm256_srli_epi64(p10, 32);
     const __m256i p02_lo = _mm256_and_si256(p02, mask32);
@@ -68,7 +68,7 @@ namespace v4q128 {
                              _mm256_add_epi64(_mm256_srli_epi64(p11, 32), _mm256_srli_epi64(p20, 32)));
     const __m256i c96_total = _mm256_add_epi64(c96_from_L, sum64_H);
 
-    // --- Weight 2^96 (bits 96..127 of result) ---
+    // 2^96
     const __m256i p03_lo = _mm256_and_si256(p03, mask32);
     const __m256i p12_lo = _mm256_and_si256(p12, mask32);
     const __m256i p21_lo = _mm256_and_si256(p21, mask32);
@@ -85,10 +85,10 @@ namespace v4q128 {
                              _mm256_add_epi64(_mm256_srli_epi64(p21, 32), _mm256_srli_epi64(p30, 32))));
     const __m256i c128_total = _mm256_add_epi64(c128_from_L, sum96_H);
 
-    // Assemble res_lo (bits 64..127)
+    // bits 64 to 127
     const __m256i res_lo = _mm256_or_si256(bits_64_95, _mm256_slli_epi64(bits_96_127, 32));
 
-    // --- Weight 2^128 (bits 128..159 of result) ---
+    // 2^128
     const __m256i p13_lo = _mm256_and_si256(p13, mask32);
     const __m256i p22_lo = _mm256_and_si256(p22, mask32);
     const __m256i p31_lo = _mm256_and_si256(p31, mask32);
@@ -102,17 +102,17 @@ namespace v4q128 {
                               _mm256_add_epi64(_mm256_srli_epi64(p22, 32), _mm256_srli_epi64(p31, 32)));
     const __m256i c160_total = _mm256_add_epi64(c160_from_L, sum128_H);
 
-    // --- Weight 2^160 (bits 160..191 of result) ---
+    // 2^160
     const __m256i p23_lo = _mm256_and_si256(p23, mask32);
     const __m256i p32_lo = _mm256_and_si256(p32, mask32);
     const __m256i sum160_L = _mm256_add_epi64(c160_total, _mm256_add_epi64(p23_lo, p32_lo));
 
     const __m256i bits_160_191 = _mm256_and_si256(sum160_L, mask32);
 
-    // Assemble unsigned res_hi base (bits 128..191)
+    // bits 128 to 191
     const __m256i res_hi_base = _mm256_or_si256(bits_128_159, _mm256_slli_epi64(bits_160_191, 32));
 
-    // 4. Two's Complement High-Limb Adjustment
+    // make sure for correct sign
     const __m256i zero = _mm256_setzero_si256();
     const __m256i sign_a_mask = _mm256_cmpgt_epi64(zero, a.hi);
     const __m256i sign_b_mask = _mm256_cmpgt_epi64(zero, b.hi);
@@ -134,6 +134,6 @@ V4Q128_INLINE v4q128& operator*=(v4q128& a, v4q128 b) noexcept {
     return a;
 }
 
-} // namespace v4q128
+} // namespace
 
 #undef V4Q128_INLINE
