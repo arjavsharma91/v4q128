@@ -108,8 +108,9 @@ namespace v4q128 {
     const __m256i res_hi_base = _mm256_or_si256(bits_128_159, _mm256_slli_epi64(bits_160_191, 32));
 
     // 4. Two's Complement High-Limb Adjustment
-    const __m256i sign_a_mask = _mm256_srai_epi64(a.hi, 63);
-    const __m256i sign_b_mask = _mm256_srai_epi64(b.hi, 63);
+    const __m256i zero = _mm256_setzero_si256();
+    const __m256i sign_a_mask = _mm256_cmpgt_epi64(zero, a.hi);
+    const __m256i sign_b_mask = _mm256_cmpgt_epi64(zero, b.hi);
 
     const __m256i corr_a = _mm256_and_si256(sign_a_mask, b.lo);
     const __m256i corr_b = _mm256_and_si256(sign_b_mask, a.lo);
