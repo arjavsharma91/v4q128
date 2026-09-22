@@ -41,5 +41,6 @@ if(V4Q128_BUILD_TESTS)
     add_executable(test_mul tests/test_mul.cpp ${V4Q128_HEADERS})
     target_link_libraries(test_mul PRIVATE v4q128)
 
-    add_test(NAME MultiplicationStressTest COMMAND test_mul)
+    add_test(NAME Mul_Deterministic COMMAND test_mul --deterministic)
+    add_test(NAME Mul_RandomStress  COMMAND test_mul --random)
 endif()
