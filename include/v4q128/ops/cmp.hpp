@@ -13,12 +13,6 @@
 
 namespace v4q128 {
 
-namespace detail {
-    [[nodiscard]] V4Q128_INLINE static __m256i sign_bit_mask() noexcept {
-        return _mm256_set1_epi64x(static_cast<long long>(0x8000000000000000ULL));
-    }
-}
-
 [[nodiscard]] V4Q128_INLINE __m256i equal(v4q128 a, v4q128 b) noexcept {
     __m256i hi_match = _mm256_cmpeq_epi64(a.hi, b.hi);
     __m256i lo_match = _mm256_cmpeq_epi64(a.lo, b.lo);
