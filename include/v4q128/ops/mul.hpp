@@ -47,14 +47,19 @@ namespace v4q128 {
     // 3. Accumulate cross products by 32-bit slices to prevent 64-bit overflow
 
     // --- Weight 2^32 ---
-    const __m256i t32 = _mm256_add_epi64(_mm256_srli_epi64(p00, 32), _mm256_add_epi64(p01, p10));
+    const __m256i p01_lo = _mm256_and_si256(p01, mask32);
+    const __m256i p10_lo = _mm256_and_si256(p10, mask32);
+    const __m256i t32 = _mm256_add_epi64(_mm256_srli_epi64(p00, 32), _mm256_add_epi64(p01_lo, p10_lo));
     const __m256i c64 = _mm256_srli_epi64(t32, 32);
 
     // --- Weight 2^64 (bits 64..95 of result) ---
+    const __m256i p01_hi = _mm256_srli_epi64(p01, 32);
+    const __m256i p10_hi = _mm256_srli_epi64(p10, 32);
     const __m256i p02_lo = _mm256_and_si256(p02, mask32);
     const __m256i p11_lo = _mm256_and_si256(p11, mask32);
     const __m256i p20_lo = _mm256_and_si256(p20, mask32);
-    const __m256i sum64_L = _mm256_add_epi64(c64, _mm256_add_epi64(p02_lo, _mm256_add_epi64(p11_lo, p20_lo)));
+    const __m256i sum64_L = _mm256_add_epi64(c64, _mm256_add_epi64(_mm256_add_epi64(p01_hi, p10_hi),
+                                                 _mm256_add_epi64(p02_lo, _mm256_add_epi64(p11_lo, p20_lo))));
 
     const __m256i bits_64_95 = _mm256_and_si256(sum64_L, mask32);
     const __m256i c96_from_L  = _mm256_srli_epi64(sum64_L, 32);
@@ -132,4 +137,3 @@ V4Q128_INLINE v4q128& operator*=(v4q128& a, v4q128 b) noexcept {
 } // namespace v4q128
 
 #undef V4Q128_INLINE
-    
