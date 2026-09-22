@@ -47,7 +47,13 @@ namespace detail {
 }
 
 [[nodiscard]] V4Q128_INLINE v4q128 neg(v4q128 a) noexcept {
-    return sub(v4q128::zero(), a);
+    __m256i one = _mm256_cmpeq_epi64(a.lo, a.lo);
+    __m256i not_lo = _mm256_xor_si256(a.lo, one);
+    __m256i not_hi = _mm256_xor_si256(a.hi, one);
+    __m256i lo_neg = _mm256_add_epi64(not_lo, _mm256_set1_epi64x(1));
+    __m256i carry = _mm256_cmpeq_epi64(lo_neg, _mm256_setzero_si256());
+    __m256i hi_neg = _mm256_sub_epi64(not_hi, carry);
+    return v4q128(lo_neg,  hi_neg)
 }
 
 [[nodiscard]] V4Q128_INLINE v4q128 operator+(v4q128 a, v4q128 b) noexcept {
