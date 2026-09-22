@@ -112,4 +112,5 @@ namespace v4q128 {
 
     return v4q128(res_lo_final, res_hi_final);
 }
+}
     
