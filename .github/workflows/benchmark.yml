@@ -15,7 +15,8 @@ jobs:
       - name: Checkout Current Branch
         uses: actions/checkout@v4
         with:
-          path: current_branch
+          ref: main
+          path: main_branch
 
       # 2. Checkout the MAIN branch to build the baseline
       - name: Checkout Main (Baseline)
