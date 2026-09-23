@@ -1,0 +1,57 @@
+name: v4q128 Branch Performance Comparison
+
+on:
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Allows manual trigger from the Actions tab on ANY branch or fork
+
+jobs:
+  compare-benchmark:
+    name: Compare Branch vs Main
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the CURRENT branch (your feature branch or fork)
+      - name: Checkout Current Branch
+        uses: actions/checkout@v4
+        with:
+          path: current_branch
+
+      # 2. Checkout the MAIN branch to build the baseline
+      - name: Checkout Main (Baseline)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main_branch
+
+      # 3. Download nanobench.h
+      - name: Download nanobench.h
+        run: |
+          mkdir -p benchmarks
+          curl -sSL -o benchmarks/nanobench.h https://raw.githubusercontent.com/martinus/nanobench/v4.3.11/src/include/nanobench.h
+          cp benchmarks/nanobench.h current_branch/benchmarks/
+          cp benchmarks/nanobench.h main_branch/benchmarks/
+
+      # 4. Compile both branches with full optimizations
+      - name: Compile Both Benchmarks
+        run: |
+          echo "=== Compiling Main Baseline ==="
+          g++ -O3 -mavx2 -std=c++17 -Imain_branch/include -Ibenchmarks main_branch/benchmarks/benchmark_mul.cpp -o bench_main
+
+          echo "=== Compiling Current Branch ==="
+          g++ -O3 -mavx2 -std=c++17 -Icurrent_branch/include -Ibenchmarks current_branch/benchmarks/benchmark_mul.cpp -o bench_current
+
+      # 5. Execute both back-to-back on the same CPU instance
+      - name: Run Baseline (Main) Benchmark
+        run: |
+          echo "--------------------------------------------------------"
+          echo " RUNNING BASELINE (main branch)                         "
+          echo "--------------------------------------------------------"
+          ./bench_main
+
+      - name: Run Feature Branch Benchmark
+        run: |
+          echo "--------------------------------------------------------"
+          echo " RUNNING CURRENT FEATURE BRANCH                         "
+          echo "--------------------------------------------------------"
+          ./bench_current
