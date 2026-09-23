@@ -2,10 +2,9 @@ name: v4q128 CI
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "**" ] # Matches every branch name, including nested ones like feature/login
   pull_request:
-    branches: [ "main", "master" ]
-
+    branches: [ "main", "master" ] # Keeps PR checks restricted to your core branches
 jobs:
   test-multiplication:
     name: Build & Stress Test
