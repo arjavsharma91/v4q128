@@ -2,12 +2,15 @@
 #include "nanobench.h"
 
 #include <immintrin.h>
-#include <v4q128/v4q128.hpp> // Top-level header that includes core/storage.hpp & ops/mul.hpp
+#include <v4q128/v4q128.hpp>
 
 #include <iostream>
 #include <vector>
 #include <cstdint>
 #include <cassert>
+
+// Bring v4q128 types and functions into scope
+using namespace v4q128;
 
 #if defined(__SIZEOF_INT128__)
 typedef __int128 int128_t;
