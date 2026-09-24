@@ -2,7 +2,7 @@
 #include "nanobench.h"
 
 #include <immintrin.h>
-#include <v4q128/ops/mul.hpp>
+#include <v4q128/v4q128.hpp> // Top-level header that includes core/storage.hpp & ops/mul.hpp
 
 #include <iostream>
 #include <vector>
@@ -115,7 +115,7 @@ int main() {
     ankerl::nanobench::Bench bench;
     bench.title("Bulk 128-bit Q64.64 Multiplication");
     bench.unit("128bit-mul");
-    bench.warmUpIters(20);
+    bench.warmup(20);
     bench.epochs(100);
 
     bench.batch(N).run("Scalar 128-bit Mul", [&] {
