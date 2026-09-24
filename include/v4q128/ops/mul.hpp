@@ -11,6 +11,8 @@
     #define V4Q128_INLINE inline
 #endif
 
+// Yes this causes spillage, but not so much that it actually goes to L1 cache, it just gets stored in the L1 store buffer with store to load forwarding, only around 4 cycles to fetch, still  looking to optimize tho
+
 namespace v4q128 {
 
 [[nodiscard]] V4Q128_INLINE v4q128 mul(v4q128 a, v4q128 b) noexcept {
