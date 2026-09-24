@@ -1,8 +1,6 @@
-name: v4q128 Benchmarks
+name: v4q128 Benchmarks (Manual)
 
 on:
-  push:
-    branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:
