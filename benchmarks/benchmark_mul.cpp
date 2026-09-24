@@ -9,8 +9,8 @@
 #include <cstdint>
 #include <cassert>
 
-// Bring v4q128 types and functions into scope
 using namespace v4q128;
+using v4q128_t = v4q128::v4q128;
 
 #if defined(__SIZEOF_INT128__)
 typedef __int128 int128_t;
@@ -62,45 +62,32 @@ int main() {
         scalar_b[i] = generate_rand128(rng_state);
     }
 
-    std::vector<v4q128> simd_a(N / 4);
-    std::vector<v4q128> simd_b(N / 4);
-    std::vector<v4q128> simd_res(N / 4);
+    std::vector<v4q128_t> simd_a(N / 4);
+    std::vector<v4q128_t> simd_b(N / 4);
+    std::vector<v4q128_t> simd_res(N / 4);
 
+    // Populate SIMD structures using storage.hpp set() helper
     for (size_t i = 0; i < N / 4; ++i) {
         const size_t idx = i * 4;
 
-        const __m256i a_lo = _mm256_set_epi64x(
-            static_cast<long long>(scalar_a[idx + 3]),
-            static_cast<long long>(scalar_a[idx + 2]),
-            static_cast<long long>(scalar_a[idx + 1]),
-            static_cast<long long>(scalar_a[idx + 0])
+        simd_a[i] = v4q128_t::set(
+            static_cast<uint64_t>(scalar_a[idx + 0]), static_cast<int64_t>(scalar_a[idx + 0] >> 64),
+            static_cast<uint64_t>(scalar_a[idx + 1]), static_cast<int64_t>(scalar_a[idx + 1] >> 64),
+            static_cast<uint64_t>(scalar_a[idx + 2]), static_cast<int64_t>(scalar_a[idx + 2] >> 64),
+            static_cast<uint64_t>(scalar_a[idx + 3]), static_cast<int64_t>(scalar_a[idx + 3] >> 64)
         );
-        const __m256i a_hi = _mm256_set_epi64x(
-            static_cast<long long>(scalar_a[idx + 3] >> 64),
-            static_cast<long long>(scalar_a[idx + 2] >> 64),
-            static_cast<long long>(scalar_a[idx + 1] >> 64),
-            static_cast<long long>(scalar_a[idx + 0] >> 64)
-        );
-        simd_a[i] = v4q128(a_lo, a_hi);
 
-        const __m256i b_lo = _mm256_set_epi64x(
-            static_cast<long long>(scalar_b[idx + 3]),
-            static_cast<long long>(scalar_b[idx + 2]),
-            static_cast<long long>(scalar_b[idx + 1]),
-            static_cast<long long>(scalar_b[idx + 0])
+        simd_b[i] = v4q128_t::set(
+            static_cast<uint64_t>(scalar_b[idx + 0]), static_cast<int64_t>(scalar_b[idx + 0] >> 64),
+            static_cast<uint64_t>(scalar_b[idx + 1]), static_cast<int64_t>(scalar_b[idx + 1] >> 64),
+            static_cast<uint64_t>(scalar_b[idx + 2]), static_cast<int64_t>(scalar_b[idx + 2] >> 64),
+            static_cast<uint64_t>(scalar_b[idx + 3]), static_cast<int64_t>(scalar_b[idx + 3] >> 64)
         );
-        const __m256i b_hi = _mm256_set_epi64x(
-            static_cast<long long>(scalar_b[idx + 3] >> 64),
-            static_cast<long long>(scalar_b[idx + 2] >> 64),
-            static_cast<long long>(scalar_b[idx + 1] >> 64),
-            static_cast<long long>(scalar_b[idx + 0] >> 64)
-        );
-        simd_b[i] = v4q128(b_lo, b_hi);
     }
 
     std::cout << "Verifying equivalence between scalar and SIMD datasets... ";
     for (size_t i = 0; i < N / 4; ++i) {
-        const v4q128 res = v4q128::mul(simd_a[i], simd_b[i]);
+        const auto res = mul(simd_a[i], simd_b[i]);
 
         alignas(32) uint64_t res_lo[4];
         alignas(32) int64_t  res_hi[4];
@@ -128,9 +115,9 @@ int main() {
         ankerl::nanobench::doNotOptimizeAway(scalar_res.data());
     });
 
-    bench.batch(N).run("v4q128 AVX2 Mul (4-way)", [&] {
+    bench.batch(N).run("v4q128 AVX2 Mul (4-way SoA)", [&] {
         for (size_t i = 0; i < N / 4; ++i) {
-            simd_res[i] = v4q128::mul(simd_a[i], simd_b[i]);
+            simd_res[i] = mul(simd_a[i], simd_b[i]);
         }
         ankerl::nanobench::doNotOptimizeAway(simd_res.data());
     });
