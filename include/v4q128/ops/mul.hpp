@@ -64,7 +64,7 @@ namespace v4q128 {
     const __m256i p22 = _mm256_mul_epu32(a.hi, b.hi);
     const __m256i p31 = _mm256_mul_epu32(a3, b1);
     const __m256i p23 = _mm256_mul_epu32(a.hi, b3);
-    const __m256i p32 = _mm256_mul_epu32(a3, b2);
+    const __m256i p32 = _mm256_mul_epu32(a3, b.hi);
 
     // Accumulate Slice 3 (2^96) — p02, p11, p20 consumed and freed!
     const __m256i sum96_L = _mm256_add_epi64(c96_total, _mm256_add_epi64(
