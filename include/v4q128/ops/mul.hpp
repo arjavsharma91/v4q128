@@ -22,9 +22,7 @@ namespace v4q128 {
     const __m256i b1 = _mm256_srli_epi64(b.lo, 32);
     const __m256i b3 = _mm256_srli_epi64(b.hi, 32);
 
-    // =========================================================================
-    // BATCH 1: Low & Mid Cross-Products (6 Multiplies)
-    // =========================================================================
+    //batch 1
     const __m256i p00 = _mm256_mul_epu32(a.lo, b.lo);
     const __m256i p01 = _mm256_mul_epu32(a.lo, b1);
     const __m256i p10 = _mm256_mul_epu32(a1, b.lo);
@@ -32,22 +30,20 @@ namespace v4q128 {
     const __m256i p11 = _mm256_mul_epu32(a1, b1);
     const __m256i p20 = _mm256_mul_epu32(a.hi, b.lo);
 
-    // Accumulate Slice 1 (2^32)
+    // 2^32 slice 1
     const __m256i p01_lo = _mm256_and_si256(p01, mask32);
     const __m256i p10_lo = _mm256_and_si256(p10, mask32);
     const __m256i t32    = _mm256_add_epi64(_mm256_srli_epi64(p00, 32), _mm256_add_epi64(p01_lo, p10_lo));
     const __m256i c64    = _mm256_srli_epi64(t32, 32);
 
-    // =========================================================================
-    // BATCH 2: Dispatch Next 5 Multiplies DURING Batch 1 Accumulation
-    // =========================================================================
+    //batch 2
     const __m256i p03 = _mm256_mul_epu32(a.lo, b3);
     const __m256i p12 = _mm256_mul_epu32(a1, b.hi);
     const __m256i p21 = _mm256_mul_epu32(a.hi, b1);
     const __m256i p30 = _mm256_mul_epu32(a3, b.lo);
     const __m256i p13 = _mm256_mul_epu32(a1, b3);
 
-    // Accumulate Slice 2 (2^64) — p00, p01, p10 consumed and freed!
+    // accumulate 2^64 slice 2
     const __m256i sum64_L = _mm256_add_epi64(c64, _mm256_add_epi64(
                                 _mm256_add_epi64(_mm256_srli_epi64(p01, 32), _mm256_srli_epi64(p10, 32)),
                                 _mm256_add_epi64(_mm256_and_si256(p02, mask32), 
@@ -58,15 +54,13 @@ namespace v4q128 {
                                 _mm256_add_epi64(_mm256_srli_epi64(p11, 32), _mm256_srli_epi64(p20, 32)));
     const __m256i c96_total  = _mm256_add_epi64(_mm256_srli_epi64(sum64_L, 32), sum64_H);
 
-    // =========================================================================
-    // BATCH 3: Dispatch Final 4 Multiplies
-    // =========================================================================
+    //batch 3 
     const __m256i p22 = _mm256_mul_epu32(a.hi, b.hi);
     const __m256i p31 = _mm256_mul_epu32(a3, b1);
     const __m256i p23 = _mm256_mul_epu32(a.hi, b3);
     const __m256i p32 = _mm256_mul_epu32(a3, b.hi);
 
-    // Accumulate Slice 3 (2^96) — p02, p11, p20 consumed and freed!
+    // 2^96 accumulate
     const __m256i sum96_L = _mm256_add_epi64(c96_total, _mm256_add_epi64(
                                 _mm256_add_epi64(_mm256_and_si256(p03, mask32), _mm256_and_si256(p12, mask32)),
                                 _mm256_add_epi64(_mm256_and_si256(p21, mask32), _mm256_and_si256(p30, mask32))));
@@ -79,7 +73,7 @@ namespace v4q128 {
 
     const __m256i res_lo = _mm256_or_si256(bits_64_95, _mm256_slli_epi64(bits_96_127, 32));
 
-    // Accumulate Slice 4 (2^128)
+    // 2^128 accumulate
     const __m256i sum128_L = _mm256_add_epi64(c128_total, _mm256_add_epi64(_mm256_and_si256(p13, mask32),
                                 _mm256_add_epi64(_mm256_and_si256(p22, mask32), _mm256_and_si256(p31, mask32))));
 
@@ -88,13 +82,13 @@ namespace v4q128 {
                                  _mm256_add_epi64(_mm256_srli_epi64(p22, 32), _mm256_srli_epi64(p31, 32)));
     const __m256i c160_total   = _mm256_add_epi64(_mm256_srli_epi64(sum128_L, 32), sum128_H);
 
-    // Accumulate Slice 5 (2^160)
+    // 2^160 accumulate
     const __m256i sum160_L     = _mm256_add_epi64(c160_total, _mm256_add_epi64(_mm256_and_si256(p23, mask32), _mm256_and_si256(p32, mask32)));
     const __m256i bits_160_191 = _mm256_and_si256(sum160_L, mask32);
 
     const __m256i res_hi_base  = _mm256_or_si256(bits_128_159, _mm256_slli_epi64(bits_160_191, 32));
 
-    // Sign Correction
+    // sign
     const __m256i zero        = _mm256_setzero_si256();
     const __m256i sign_a_mask = _mm256_cmpgt_epi64(zero, a.hi);
     const __m256i sign_b_mask = _mm256_cmpgt_epi64(zero, b.hi);
@@ -110,6 +104,6 @@ namespace v4q128 {
 [[nodiscard]] V4Q128_INLINE v4q128 operator*(v4q128 a, v4q128 b) noexcept { return mul(a, b); }
 V4Q128_INLINE v4q128& operator*=(v4q128& a, v4q128 b) noexcept { a = mul(a, b); return a; }
 
-} // namespace v4q128
+} // namespace 
 
 #undef V4Q128_INLINE
