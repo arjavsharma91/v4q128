@@ -17,11 +17,25 @@ using namespace v4q128;
 using v4q128_t = v4q128::v4q128;
 
 // =============================================================================
+// Helper RNG (Defined before usage)
+// =============================================================================
+static uint64_t splitmix64_impl(uint64_t& state) noexcept {
+    uint64_t z = (state += 0x9e3779b97f4a7c15ULL);
+    z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
+    z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
+    return z ^ (z >> 31);
+}
+
+// =============================================================================
 // Cross-Platform 128-Bit Scalar Q64.64 Multiplication (MSVC & GCC/Clang)
 // =============================================================================
 #if defined(__SIZEOF_INT128__)
     typedef __int128 int128_t;
     typedef unsigned __int128 uint128_t;
+
+    inline int128_t make_int128(uint64_t lo, int64_t hi) noexcept {
+        return (static_cast<int128_t>(hi) << 64) | lo;
+    }
 
     inline int128_t scalar_mul_q64_64(int128_t a, int128_t b) noexcept {
         const uint64_t a_lo = static_cast<uint64_t>(a);
@@ -42,8 +56,8 @@ using v4q128_t = v4q128::v4q128;
 
     static int128_t generate_rand128(uint64_t& state) noexcept {
         const uint64_t lo = splitmix64_impl(state);
-        const uint64_t hi = splitmix64_impl(state);
-        return (static_cast<int128_t>(hi) << 64) | lo;
+        const int64_t  hi = static_cast<int64_t>(splitmix64_impl(state));
+        return make_int128(lo, hi);
     }
 #else
     // MSVC Native Fallback using _mul128 / _umul128 intrinsics
@@ -55,6 +69,10 @@ using v4q128_t = v4q128::v4q128;
             return lo == o.lo && hi == o.hi;
         }
     };
+
+    inline int128_t make_int128(uint64_t lo, int64_t hi) noexcept {
+        return int128_t{lo, hi};
+    }
 
     inline int128_t scalar_mul_q64_64(int128_t a, int128_t b) noexcept {
         uint64_t p00_hi;
@@ -83,16 +101,9 @@ using v4q128_t = v4q128::v4q128;
     static int128_t generate_rand128(uint64_t& state) noexcept {
         const uint64_t lo = splitmix64_impl(state);
         const int64_t  hi = static_cast<int64_t>(splitmix64_impl(state));
-        return int128_t{lo, hi};
+        return make_int128(lo, hi);
     }
 #endif
-
-static uint64_t splitmix64_impl(uint64_t& state) noexcept {
-    uint64_t z = (state += 0x9e3779b97f4a7c15ULL);
-    z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
-    z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
-    return z ^ (z >> 31);
-}
 
 int main() {
     constexpr size_t N = 65536;
@@ -146,7 +157,7 @@ int main() {
 
         for (int j = 0; j < 4; ++j) {
             const int128_t expected = scalar_mul_q64_64(scalar_a[i * 4 + j], scalar_b[i * 4 + j]);
-            const int128_t actual   = int128_t{res_lo[j], res_hi[j]};
+            const int128_t actual   = make_int128(res_lo[j], res_hi[j]);
 
             assert(get_lo(expected) == get_lo(actual) && "SIMD lo limb mismatch!");
             assert(get_hi(expected) == get_hi(actual) && "SIMD hi limb mismatch!");
@@ -155,18 +166,13 @@ int main() {
     std::cout << "PASSED!\n\n";
 
     // =========================================================================
-    // Nanobench Configuration (Deterministic Cycles Mode for Windows/Linux)
+    // Nanobench Configuration
     // =========================================================================
     ankerl::nanobench::Bench bench;
     bench.title("Bulk 128-bit Q64.64 Multiplication");
     bench.unit("128bit-mul");
     bench.warmup(100);
     bench.epochs(100);
-
-    // Forces nanobench to directly count CPU clock cycles (RDTSC)
-    bench.clockResolutionCustom([]() {
-        return ankerl::nanobench::Clock::duration(1);
-    });
 
     bench.batch(N).run("Scalar 128-bit Mul", [&] {
         for (size_t i = 0; i < N; ++i) {
