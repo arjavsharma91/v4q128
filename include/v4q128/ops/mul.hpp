@@ -16,15 +16,14 @@ namespace v4q128 {
 [[nodiscard]] V4Q128_INLINE v4q128 mul(v4q128 a, v4q128 b) noexcept {
     const __m256i mask32 = _mm256_set1_epi64x(0x00000000FFFFFFFFULL);
 
-    // Extract high 32-bit limbs on demand
+    // 1. Extract 32-bit high limbs
     const __m256i a1 = _mm256_srli_epi64(a.lo, 32);
     const __m256i a3 = _mm256_srli_epi64(a.hi, 32);
     const __m256i b1 = _mm256_srli_epi64(b.lo, 32);
     const __m256i b3 = _mm256_srli_epi64(b.hi, 32);
 
     // =========================================================================
-    // WAVE 1: Lower 64-bit Result (bits 64..127)
-    // Dispatches 10 independent multiplies in parallel to saturate Ports 0 & 1.
+    // BATCH 1: Low & Mid Cross-Products (6 Multiplies)
     // =========================================================================
     const __m256i p00 = _mm256_mul_epu32(a.lo, b.lo);
     const __m256i p01 = _mm256_mul_epu32(a.lo, b1);
@@ -32,18 +31,23 @@ namespace v4q128 {
     const __m256i p02 = _mm256_mul_epu32(a.lo, b.hi);
     const __m256i p11 = _mm256_mul_epu32(a1, b1);
     const __m256i p20 = _mm256_mul_epu32(a.hi, b.lo);
-    const __m256i p03 = _mm256_mul_epu32(a.lo, b3);
-    const __m256i p12 = _mm256_mul_epu32(a1, b.hi);
-    const __m256i p21 = _mm256_mul_epu32(a.hi, b1);
-    const __m256i p30 = _mm256_mul_epu32(a3, b.lo);
 
-    // Slice 1: Weight 2^32
+    // Accumulate Slice 1 (2^32)
     const __m256i p01_lo = _mm256_and_si256(p01, mask32);
     const __m256i p10_lo = _mm256_and_si256(p10, mask32);
     const __m256i t32    = _mm256_add_epi64(_mm256_srli_epi64(p00, 32), _mm256_add_epi64(p01_lo, p10_lo));
     const __m256i c64    = _mm256_srli_epi64(t32, 32);
 
-    // Slice 2: Weight 2^64 (bits 64..95)
+    // =========================================================================
+    // BATCH 2: Dispatch Next 5 Multiplies DURING Batch 1 Accumulation
+    // =========================================================================
+    const __m256i p03 = _mm256_mul_epu32(a.lo, b3);
+    const __m256i p12 = _mm256_mul_epu32(a1, b.hi);
+    const __m256i p21 = _mm256_mul_epu32(a.hi, b1);
+    const __m256i p30 = _mm256_mul_epu32(a3, b.lo);
+    const __m256i p13 = _mm256_mul_epu32(a1, b3);
+
+    // Accumulate Slice 2 (2^64) — p00, p01, p10 consumed and freed!
     const __m256i sum64_L = _mm256_add_epi64(c64, _mm256_add_epi64(
                                 _mm256_add_epi64(_mm256_srli_epi64(p01, 32), _mm256_srli_epi64(p10, 32)),
                                 _mm256_add_epi64(_mm256_and_si256(p02, mask32), 
@@ -54,7 +58,15 @@ namespace v4q128 {
                                 _mm256_add_epi64(_mm256_srli_epi64(p11, 32), _mm256_srli_epi64(p20, 32)));
     const __m256i c96_total  = _mm256_add_epi64(_mm256_srli_epi64(sum64_L, 32), sum64_H);
 
-    // Slice 3: Weight 2^96 (bits 96..127)
+    // =========================================================================
+    // BATCH 3: Dispatch Final 4 Multiplies
+    // =========================================================================
+    const __m256i p22 = _mm256_mul_epu32(a.hi, b.hi);
+    const __m256i p31 = _mm256_mul_epu32(a3, b1);
+    const __m256i p23 = _mm256_mul_epu32(a.hi, b3);
+    const __m256i p32 = _mm256_mul_epu32(a3, b2);
+
+    // Accumulate Slice 3 (2^96) — p02, p11, p20 consumed and freed!
     const __m256i sum96_L = _mm256_add_epi64(c96_total, _mm256_add_epi64(
                                 _mm256_add_epi64(_mm256_and_si256(p03, mask32), _mm256_and_si256(p12, mask32)),
                                 _mm256_add_epi64(_mm256_and_si256(p21, mask32), _mm256_and_si256(p30, mask32))));
@@ -65,20 +77,9 @@ namespace v4q128 {
                                  _mm256_add_epi64(_mm256_srli_epi64(p21, 32), _mm256_srli_epi64(p30, 32))));
     const __m256i c128_total  = _mm256_add_epi64(_mm256_srli_epi64(sum96_L, 32), sum96_H);
 
-    // Finalize res_lo -> frees p00-p30 intermediate YMM registers!
     const __m256i res_lo = _mm256_or_si256(bits_64_95, _mm256_slli_epi64(bits_96_127, 32));
 
-    // =========================================================================
-    // WAVE 2: Upper 64-bit Result (bits 128..191)
-    // Reuses cleared YMM registers for the remaining 5 multiplies.
-    // =========================================================================
-    const __m256i p13 = _mm256_mul_epu32(a1, b3);
-    const __m256i p22 = _mm256_mul_epu32(a.hi, b.hi);
-    const __m256i p31 = _mm256_mul_epu32(a3, b1);
-    const __m256i p23 = _mm256_mul_epu32(a.hi, b3);
-    const __m256i p32 = _mm256_mul_epu32(a3, b.hi);
-
-    // Slice 4: Weight 2^128 (bits 128..159)
+    // Accumulate Slice 4 (2^128)
     const __m256i sum128_L = _mm256_add_epi64(c128_total, _mm256_add_epi64(_mm256_and_si256(p13, mask32),
                                 _mm256_add_epi64(_mm256_and_si256(p22, mask32), _mm256_and_si256(p31, mask32))));
 
@@ -87,13 +88,13 @@ namespace v4q128 {
                                  _mm256_add_epi64(_mm256_srli_epi64(p22, 32), _mm256_srli_epi64(p31, 32)));
     const __m256i c160_total   = _mm256_add_epi64(_mm256_srli_epi64(sum128_L, 32), sum128_H);
 
-    // Slice 5: Weight 2^160 (bits 160..191)
+    // Accumulate Slice 5 (2^160)
     const __m256i sum160_L     = _mm256_add_epi64(c160_total, _mm256_add_epi64(_mm256_and_si256(p23, mask32), _mm256_and_si256(p32, mask32)));
     const __m256i bits_160_191 = _mm256_and_si256(sum160_L, mask32);
 
     const __m256i res_hi_base  = _mm256_or_si256(bits_128_159, _mm256_slli_epi64(bits_160_191, 32));
 
-    // Two's complement high-limb adjustment for signed Q64.64 math
+    // Sign Correction
     const __m256i zero        = _mm256_setzero_si256();
     const __m256i sign_a_mask = _mm256_cmpgt_epi64(zero, a.hi);
     const __m256i sign_b_mask = _mm256_cmpgt_epi64(zero, b.hi);
@@ -106,14 +107,8 @@ namespace v4q128 {
     return v4q128(res_lo, res_hi);
 }
 
-[[nodiscard]] V4Q128_INLINE v4q128 operator*(v4q128 a, v4q128 b) noexcept {
-    return mul(a, b);
-}
-
-V4Q128_INLINE v4q128& operator*=(v4q128& a, v4q128 b) noexcept {
-    a = mul(a, b);
-    return a;
-}
+[[nodiscard]] V4Q128_INLINE v4q128 operator*(v4q128 a, v4q128 b) noexcept { return mul(a, b); }
+V4Q128_INLINE v4q128& operator*=(v4q128& a, v4q128 b) noexcept { a = mul(a, b); return a; }
 
 } // namespace v4q128
 
