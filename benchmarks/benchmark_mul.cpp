@@ -9,39 +9,89 @@
 #include <cstdint>
 #include <cassert>
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <intrin.h>
+#endif
+
 using namespace v4q128;
 using v4q128_t = v4q128::v4q128;
 
+// =============================================================================
+// Cross-Platform 128-Bit Scalar Q64.64 Multiplication (MSVC & GCC/Clang)
+// =============================================================================
 #if defined(__SIZEOF_INT128__)
-typedef __int128 int128_t;
-typedef unsigned __int128 uint128_t;
+    typedef __int128 int128_t;
+    typedef unsigned __int128 uint128_t;
 
-inline int128_t scalar_mul_q64_64(int128_t a, int128_t b) noexcept {
-    const uint64_t a_lo = static_cast<uint64_t>(a);
-    const int64_t  a_hi = static_cast<int64_t>(a >> 64);
-    const uint64_t b_lo = static_cast<uint64_t>(b);
-    const int64_t  b_hi = static_cast<int64_t>(b >> 64);
+    inline int128_t scalar_mul_q64_64(int128_t a, int128_t b) noexcept {
+        const uint64_t a_lo = static_cast<uint64_t>(a);
+        const int64_t  a_hi = static_cast<int64_t>(a >> 64);
+        const uint64_t b_lo = static_cast<uint64_t>(b);
+        const int64_t  b_hi = static_cast<int64_t>(b >> 64);
 
-    const uint128_t p00 = static_cast<uint128_t>(a_lo) * b_lo;
-    const int128_t  p01 = static_cast<int128_t>(a_lo) * b_hi;
-    const int128_t  p10 = static_cast<int128_t>(a_hi) * b_lo;
-    const int128_t  p11 = static_cast<int128_t>(a_hi) * b_hi;
+        const uint128_t p00 = static_cast<uint128_t>(a_lo) * b_lo;
+        const int128_t  p01 = static_cast<int128_t>(a_lo) * b_hi;
+        const int128_t  p10 = static_cast<int128_t>(a_hi) * b_lo;
+        const int128_t  p11 = static_cast<int128_t>(a_hi) * b_hi;
 
-    return static_cast<int128_t>(p00 >> 64) + p01 + p10 + (p11 << 64);
-}
+        return static_cast<int128_t>(p00 >> 64) + p01 + p10 + (p11 << 64);
+    }
+
+    inline uint64_t get_lo(int128_t v) noexcept { return static_cast<uint64_t>(v); }
+    inline int64_t  get_hi(int128_t v) noexcept { return static_cast<int64_t>(v >> 64); }
+
+    static int128_t generate_rand128(uint64_t& state) noexcept {
+        const uint64_t lo = splitmix64_impl(state);
+        const uint64_t hi = splitmix64_impl(state);
+        return (static_cast<int128_t>(hi) << 64) | lo;
+    }
+#else
+    // MSVC Native Fallback using _mul128 / _umul128 intrinsics
+    struct int128_t {
+        uint64_t lo;
+        int64_t  hi;
+
+        bool operator==(const int128_t& o) const noexcept {
+            return lo == o.lo && hi == o.hi;
+        }
+    };
+
+    inline int128_t scalar_mul_q64_64(int128_t a, int128_t b) noexcept {
+        uint64_t p00_hi;
+        uint64_t p00_lo = _umul128(a.lo, b.lo, &p00_hi);
+
+        int64_t p01_hi;
+        int64_t p01_lo = _mul128(static_cast<int64_t>(a.lo), b.hi, &p01_hi);
+
+        int64_t p10_hi;
+        int64_t p10_lo = _mul128(a.hi, static_cast<int64_t>(b.lo), &p10_hi);
+
+        int64_t p11_hi;
+        int64_t p11_lo = _mul128(a.hi, b.hi, &p11_hi);
+
+        uint64_t res_lo = p00_hi + static_cast<uint64_t>(p01_lo) + static_cast<uint64_t>(p10_lo);
+        int64_t  res_hi = p01_hi + p10_hi + p11_lo;
+
+        if (res_lo < p00_hi) res_hi++; // Carry handling
+
+        return int128_t{res_lo, res_hi};
+    }
+
+    inline uint64_t get_lo(int128_t v) noexcept { return v.lo; }
+    inline int64_t  get_hi(int128_t v) noexcept { return v.hi; }
+
+    static int128_t generate_rand128(uint64_t& state) noexcept {
+        const uint64_t lo = splitmix64_impl(state);
+        const int64_t  hi = static_cast<int64_t>(splitmix64_impl(state));
+        return int128_t{lo, hi};
+    }
 #endif
 
-static uint64_t splitmix64(uint64_t& state) noexcept {
+static uint64_t splitmix64_impl(uint64_t& state) noexcept {
     uint64_t z = (state += 0x9e3779b97f4a7c15ULL);
     z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
     z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
     return z ^ (z >> 31);
-}
-
-static int128_t generate_rand128(uint64_t& state) noexcept {
-    const uint64_t lo = splitmix64(state);
-    const uint64_t hi = splitmix64(state);
-    return (static_cast<int128_t>(hi) << 64) | lo;
 }
 
 int main() {
@@ -71,17 +121,17 @@ int main() {
         const size_t idx = i * 4;
 
         simd_a[i] = v4q128_t::set(
-            static_cast<uint64_t>(scalar_a[idx + 0]), static_cast<int64_t>(scalar_a[idx + 0] >> 64),
-            static_cast<uint64_t>(scalar_a[idx + 1]), static_cast<int64_t>(scalar_a[idx + 1] >> 64),
-            static_cast<uint64_t>(scalar_a[idx + 2]), static_cast<int64_t>(scalar_a[idx + 2] >> 64),
-            static_cast<uint64_t>(scalar_a[idx + 3]), static_cast<int64_t>(scalar_a[idx + 3] >> 64)
+            get_lo(scalar_a[idx + 0]), get_hi(scalar_a[idx + 0]),
+            get_lo(scalar_a[idx + 1]), get_hi(scalar_a[idx + 1]),
+            get_lo(scalar_a[idx + 2]), get_hi(scalar_a[idx + 2]),
+            get_lo(scalar_a[idx + 3]), get_hi(scalar_a[idx + 3])
         );
 
         simd_b[i] = v4q128_t::set(
-            static_cast<uint64_t>(scalar_b[idx + 0]), static_cast<int64_t>(scalar_b[idx + 0] >> 64),
-            static_cast<uint64_t>(scalar_b[idx + 1]), static_cast<int64_t>(scalar_b[idx + 1] >> 64),
-            static_cast<uint64_t>(scalar_b[idx + 2]), static_cast<int64_t>(scalar_b[idx + 2] >> 64),
-            static_cast<uint64_t>(scalar_b[idx + 3]), static_cast<int64_t>(scalar_b[idx + 3] >> 64)
+            get_lo(scalar_b[idx + 0]), get_hi(scalar_b[idx + 0]),
+            get_lo(scalar_b[idx + 1]), get_hi(scalar_b[idx + 1]),
+            get_lo(scalar_b[idx + 2]), get_hi(scalar_b[idx + 2]),
+            get_lo(scalar_b[idx + 3]), get_hi(scalar_b[idx + 3])
         );
     }
 
@@ -96,17 +146,27 @@ int main() {
 
         for (int j = 0; j < 4; ++j) {
             const int128_t expected = scalar_mul_q64_64(scalar_a[i * 4 + j], scalar_b[i * 4 + j]);
-            const int128_t actual = (static_cast<int128_t>(res_hi[j]) << 64) | res_lo[j];
-            assert(expected == actual && "SIMD output does not match scalar output!");
+            const int128_t actual   = int128_t{res_lo[j], res_hi[j]};
+
+            assert(get_lo(expected) == get_lo(actual) && "SIMD lo limb mismatch!");
+            assert(get_hi(expected) == get_hi(actual) && "SIMD hi limb mismatch!");
         }
     }
     std::cout << "PASSED!\n\n";
 
+    // =========================================================================
+    // Nanobench Configuration (Deterministic Cycles Mode for Windows/Linux)
+    // =========================================================================
     ankerl::nanobench::Bench bench;
     bench.title("Bulk 128-bit Q64.64 Multiplication");
     bench.unit("128bit-mul");
-    bench.warmup(20);
+    bench.warmup(100);
     bench.epochs(100);
+
+    // Forces nanobench to directly count CPU clock cycles (RDTSC)
+    bench.clockResolutionCustom([]() {
+        return ankerl::nanobench::Clock::duration(1);
+    });
 
     bench.batch(N).run("Scalar 128-bit Mul", [&] {
         for (size_t i = 0; i < N; ++i) {
@@ -115,7 +175,7 @@ int main() {
         ankerl::nanobench::doNotOptimizeAway(scalar_res.data());
     });
 
-    bench.batch(N).run("v4q128 AVX2 Mul (4-way SoA)", [&] {
+    bench.batch(N).run("v4q128 AVX2 Mul (4-way SoA - 2 Wave)", [&] {
         for (size_t i = 0; i < N / 4; ++i) {
             simd_res[i] = mul(simd_a[i], simd_b[i]);
         }
