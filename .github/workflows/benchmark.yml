@@ -20,6 +20,9 @@ jobs:
       - name: Compile Benchmark
         run: |
           g++ -O3 -mavx2 -std=c++17 -Iinclude -Ibenchmarks benchmarks/benchmark_mul.cpp -o bench_mul
+          g++ -O3 -mavx2 -std=c++17 -Iinclude -Ibenchmarks benchmarks/benchmark_add_sub.cpp -o bench_add_sub
 
       - name: Execute Benchmark
-        run: ./bench_mul
+        run: |
+          ./bench_mul
+          ./bench_add_sub
