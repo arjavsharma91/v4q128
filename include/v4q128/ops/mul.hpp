@@ -107,3 +107,5 @@ V4Q128_INLINE v4q128& operator*=(v4q128& a, v4q128 b) noexcept { a = mul(a, b); 
 } // namespace 
 
 #undef V4Q128_INLINE
+
+// yes i know this causes register spilling, but it doesn't actually have to write to L1 cache it just stays in store buffer, and i would rather 5-7 cycle latency of fetching from store buffer than creating a mean carry chain dependency and destroying ILP
