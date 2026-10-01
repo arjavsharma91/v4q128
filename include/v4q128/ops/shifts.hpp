@@ -46,6 +46,8 @@ template <int N>
 [[nodiscard]] V4Q128_INLINE v4q128 shl_imm(v4q128 vec) noexcept {
     if constexpr (N == 0) {
         return vec;
+    } else if constexpr (N >= 128) {
+        return v4q128::zero();
     } else if constexpr (N < 64) {
         __m256i hi_shifted = _mm256_slli_epi64(vec.hi, N);
         __m256i carry = _mm256_srli_epi64(vec.lo, 64 - N);
@@ -63,6 +65,8 @@ template <int N>
 [[nodiscard]] V4Q128_INLINE v4q128 srl_imm(v4q128 vec) noexcept {
     if constexpr (N == 0) {
         return vec;
+    } else if constexpr (N >= 128) {
+        return v4q128::zero();
     } else if constexpr (N < 64) {
         __m256i lo_shifted = _mm256_srli_epi64(vec.lo, N);
         __m256i carry = _mm256_slli_epi64(vec.hi, 64 - N);
@@ -80,6 +84,8 @@ template <int N>
 [[nodiscard]] V4Q128_INLINE v4q128 sra_imm(v4q128 vec) noexcept {
     if constexpr (N == 0) {
         return vec;
+    } else if constexpr (N >= 128) {
+        return v4q128::zero();
     } else if constexpr (N < 64) {
         __m256i lo_shifted = _mm256_srli_epi64(vec.lo, N);
         __m256i carry = _mm256_slli_epi64(vec.hi, 64 - N);
