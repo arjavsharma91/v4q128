@@ -19,7 +19,7 @@ namespace detail {
         if constexpr (N == 0) return v;
         __m256i srl = _mm256_srli_epi64(v, N);
         __m256i sign_bit_mask = _mm256_cmpgt_epi64(_mm256_setzero_si256(), v);
-        __m256i fill = _mm256_slli_epi64(sign_mask, 64 - N);
+        __m256i fill = _mm256_slli_epi64(sign_bit_mask, 64 - N);
         return _mm256_or_si256(srl, fill);
     }
 
