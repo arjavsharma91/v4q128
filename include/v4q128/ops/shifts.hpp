@@ -38,3 +38,24 @@ namespace detail {
         __m256i fill = _mm256_slli_epi64(active_sign, _mm256_sub_epi64(v64, count));
         return _mm256_or_si256(srl, fill);
     }
+}
+
+// compile time
+
+template <int N>
+[[nodiscard]] V4Q128_INLINE v4q128 shl_imm(v4q128 vec) noexcept {
+    if constexpr (N == 0) {
+        return vec;
+    } else if constexpr (N < 64) {
+        __m256i hi_shifted = _mm256_slli_epi64(vec.hi, N);
+        __m256i carry = _mm256_srli_epi64(vec.lo, 64 - N);
+        __m256i hi_final = _mm256_or_si256(hi_shifted, carry);
+        __m256i lo_final = _mm256_slli_epi64(vec.lo, N);
+        return v4q128(hi_final, lo_final);
+    } else {
+        __m256i hi_final = _mm256_slli_epi64(vec.lo, 64 - N);
+        __m256i lo_final = _mm256_setzero_si256();
+        return v4q128(hi_final, lo_final);
+    }
+}
+
