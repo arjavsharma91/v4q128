@@ -53,7 +53,7 @@ template <int N>
         __m256i lo_final = _mm256_slli_epi64(vec.lo, N);
         return v4q128(hi_final, lo_final);
     } else {
-        __m256i hi_final = _mm256_slli_epi64(vec.lo, 64 - N);
+        __m256i hi_final = _mm256_slli_epi64(vec.lo, N-64);
         __m256i lo_final = _mm256_setzero_si256();
         return v4q128(hi_final, lo_final);
     }
@@ -70,10 +70,25 @@ template <int N>
         __m256i hi_final = _mm256_srli_epi64(vec.hi, N);
         return v4q128(hi_final, lo_final);
     } else {
-        __m256i lo_final = _mm256_srli_epi64(vec.hi, 64 - N);
+        __m256i lo_final = _mm256_srli_epi64(vec.hi, N-64);
         __m256i hi_final = _mm256_setzero_si256();
     }
 }
 
-
+template <int N>
+[[nodiscard]] V4Q128_INLINE v4q128 sra_imm(v4q128 vec) noxecept {
+    if constexpr (N == 0) {
+        return vec;
+    } else if (N < 64) {
+        __m256i lo_shifted = _mm256_srli_epi64(vec.lo, N);
+        __m256i carry = _mm256_slli_epi64(vec.hi, 64 - N);
+        __m256i lo_final = _mm256_or_epi64(lo_shifted, carry);
+        __m256i hi_final = detail::sra_epi64_imm<N>(vec.hi);
+        return v4q128(hi_final, lo_final);
+    } else {
+        __m256i hi_final = _mm256_cmpgt_epi64(_mm256_setzero_si256(), vec.hi);
+        __m256i lo_final = detail::sra_epi64_imm<N-64>(vec.hi);
+        return v4q128(hi_final, lo_final);
+    }
+}
     
