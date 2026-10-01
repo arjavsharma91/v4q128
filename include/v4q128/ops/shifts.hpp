@@ -99,4 +99,11 @@ template <int N>
         return v4q128(lo_final, hi_final);
     }
 }
-    
+
+// variable shifts
+
+template <int N>
+[[nodiscard]] V4Q128_INLINE v4q128 shl_var(v4q128 vec) noexcept {
+    __m256i zero = _mm256_setzero_si256();
+    __m256i v63 = _mm256_set1_epi64(63);
+    __m256i v64 = _mm256_set1_epi64(64);
