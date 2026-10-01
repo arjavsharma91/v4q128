@@ -59,3 +59,21 @@ template <int N>
     }
 }
 
+template <int N>
+[[nodiscard]] V4Q128_INLINE v4q128 srl_imm(v4q128 vec) noexcept {
+    if constexpr (N == 0) {
+        return vec;
+    } else if (N < 64) {
+        __m256i lo_shifted = _mm256_srli_epi64(vec.lo, N);
+        __m256i carry = _mm256_slli_epi64(vec.hi, 64 - N);
+        __m256i lo_final = _mm256_or_si256(lo_shifted, carry);
+        __m256i hi_final = _mm256_srli_epi64(vec.hi, N);
+        return v4q128(hi_final, lo_final);
+    } else {
+        __m256i lo_final = _mm256_srli_epi64(vec.hi, 64 - N);
+        __m256i hi_final = _mm256_setzero_si256();
+    }
+}
+
+
+    
