@@ -35,7 +35,7 @@ namespace detail {
         __m256i valid_mask = _mm256_cmpgt_epi64(cnt_mod64, zero);
         __m256i active_sign = _mm256_and_si256(sign_mask, valid_mask);
 
-        __m256i fill = _mm256_slli_epi64(active_sign, _mm256_sub_epi64(v64, count));
+        __m256i fill = _mm256_sllv_epi64(active_sign, _mm256_sub_epi64(v64, count));
         return _mm256_or_si256(srl, fill);
     }
 }
@@ -85,7 +85,8 @@ template <int N>
     if constexpr (N == 0) {
         return vec;
     } else if constexpr (N >= 128) {
-        return v4q128::zero();
+        __m256i sign_fill = _mm256_cmpgt_epi64(_mm256_setzero_si256(), vec.hi);
+        return v4q128(sign_fill, sign_fill);
     } else if constexpr (N < 64) {
         __m256i lo_shifted = _mm256_srli_epi64(vec.lo, N);
         __m256i carry = _mm256_slli_epi64(vec.hi, 64 - N);
