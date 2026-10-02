@@ -104,8 +104,8 @@ template <int N>
 
 [[nodiscard]] V4Q128_INLINE v4q128 shl_var(v4q128 vec, __m256i count) noexcept {
     const __m256i zero = _mm256_setzero_si256();
-    const __m256i v63 = _mm256_set1_epi64(63);
-    const __m256i v64 = _mm256_set1_epi64(64);
+    const __m256i v63 = _mm256_set1_epi64x(63);
+    const __m256i v64 = _mm256_set1_epi64x(64);
 
     __m256i cnt_mod64 = _mm256_and_si256(count, v63);
     __m256i valid_carry = _mm256_cmpgt_epi64(cnt_mod64, zero);
