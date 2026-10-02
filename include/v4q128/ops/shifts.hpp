@@ -102,8 +102,17 @@ template <int N>
 
 // variable shifts
 
-template <int N>
-[[nodiscard]] V4Q128_INLINE v4q128 shl_var(v4q128 vec) noexcept {
-    __m256i zero = _mm256_setzero_si256();
-    __m256i v63 = _mm256_set1_epi64(63);
-    __m256i v64 = _mm256_set1_epi64(64);
+[[nodiscard]] V4Q128_INLINE v4q128 shl_var(v4q128 vec, __m256i count) noexcept {
+    const __m256i zero = _mm256_setzero_si256();
+    const __m256i v63 = _mm256_set1_epi64(63);
+    const __m256i v64 = _mm256_set1_epi64(64);
+
+    __m256i cnt_mod64 = _mm256_and_si256(count, v63);
+    __m256i valid_carry = _mm256_cmpgt_epi64(cnt_mod64, zero);
+
+    __m256i hi_shl = _mm256_sllv_epi64(vec.hi, count);
+    __m256i lo_carry = _mm256_srlv_epi64(cnt_mod64, zero);
+    lo_carry = _mm256_and_si256(lo_carry, valid_carry);
+
+    
+    
