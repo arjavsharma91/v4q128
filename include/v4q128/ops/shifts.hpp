@@ -129,4 +129,28 @@ template <int N>
 }
 
     
-    
+[[nodiscard]] V4Q128_INLINE v4q128 shr_var(v4q128 vec, __m256i count) noexcept {
+    const __m256i v63 = _mm256_set1_epi64(63);
+    const __m256i v64 = _mm256_set1_epi64(64);
+    const __m256i v127 = _mm256_set1_epi64(127);
+
+    __m256i hi_shiftone = _mm256_srlv_epi64(vec.hi, 1);
+    __m256i sub64 = _mm256_sub_epi64(v63, count);
+    __m256i carry = _mm256_srlv_epi64(hi_shiftone, sub64);
+
+    __m256i lo_shifted = _mm256_srlv_epi64(vec.lo, count);
+    __m256i lo_lt64 = _mm256_or_si256(lo_shifted, carry);
+    __m256i hi_lt64 = _mm256_srlv_epi64(vec.hi, count);
+
+    __m256i lo_gt64 = _mm256_srlv_epi64(vec.hi, _mm256_sub_epi64(count, v64));
+
+    __m256i gt63 = _mm256_cmpgt_epi64(count, v63);
+    __m256i gt127 = _mm256_cmpgt_epi64(count, v127);
+
+    __m256i final_hi = _mm256_andnot_epi64(gt63, hi_lt64);
+
+    __m256i lo_blend = _mm256_blendv_epi64(lo_lt64, lo_gt64, gt63);
+    __m256i final_lo = _mm256_andnot_si256(gt127, lo_blend);
+
+    return v4q128(final_lo, final_hi);
+}
