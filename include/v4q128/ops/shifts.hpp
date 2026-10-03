@@ -25,17 +25,13 @@ namespace detail {
 
     [[nodiscard]] V4Q128_INLINE __m256i sra_epi64_var(__m256i v, __m256i count) noexcept {
         const __m256i zero = _mm256_setzero_si256();
-        const __m256i v64 = _mm256_set1_epi64x(64);
         const __m256i v63 = _mm256_set1_epi64x(63);
 
         __m256i srl = _mm256_srlv_epi64(v, count);
         __m256i sign_mask = _mm256_cmpgt_epi64(zero, v);
-
-        __m256i cnt_mod64 = _mm256_and_si256(count, v63);
-        __m256i valid_mask = _mm256_cmpgt_epi64(cnt_mod64, zero);
-        __m256i active_sign = _mm256_and_si256(sign_mask, valid_mask);
-
-        __m256i fill = _mm256_sllv_epi64(active_sign, _mm256_sub_epi64(v64, count));
+        __m256i sign_sl1 = _mm256_slli_epi64(sign_mask, 1);
+        __m256i sub63 = _mm256_sub_epi64(v63, count);
+        __m256i fill = _mm256_sllv_epi64(sign_sl1);
         return _mm256_or_si256(srl, fill);
     }
 }
@@ -130,13 +126,13 @@ template <int N>
 
     
 [[nodiscard]] V4Q128_INLINE v4q128 shr_var(v4q128 vec, __m256i count) noexcept {
-    const __m256i v63 = _mm256_set1_epi64(63);
-    const __m256i v64 = _mm256_set1_epi64(64);
-    const __m256i v127 = _mm256_set1_epi64(127);
+    const __m256i v63 = _mm256_set1_epi64x(63);
+    const __m256i v64 = _mm256_set1_epi64x(64);
+    const __m256i v127 = _mm256_set1_epi64x(127);
 
-    __m256i hi_shiftone = _mm256_srlv_epi64(vec.hi, 1);
+    __m256i hi_shiftone = _mm256_slli_epi64(vec.hi, 1);
     __m256i sub64 = _mm256_sub_epi64(v63, count);
-    __m256i carry = _mm256_srlv_epi64(hi_shiftone, sub64);
+    __m256i carry = _mm256_slli_epi64(hi_shiftone, sub64);
 
     __m256i lo_shifted = _mm256_srlv_epi64(vec.lo, count);
     __m256i lo_lt64 = _mm256_or_si256(lo_shifted, carry);
@@ -154,3 +150,21 @@ template <int N>
 
     return v4q128(final_lo, final_hi);
 }
+
+[[nodiscard]] V4Q128_INLINE v4q128 sra_var(v4q128 vec, __m256i count) noexcept {
+    __m256i v63 = _mm256_set1_epi64x(63);
+    __m256i v64 = _mm256_set1_epi64x(64);
+    __m256i v127 = _mm256_set1_epi64x(127);
+
+    __m256i sign_mask = _mm256_cmpgt_epi64(zero, vec.hi);
+
+    __m256i hi_shiftone = _mm256_slli_epi64(vec.hi, 1);
+    __m256i sub64 = _mm256_sub_epi64(v63, count);
+    __m256i carry = _mm256_slli_epi64(hi_sl1, sub64);
+    
+    __m256i lo_shifted = _mm256_srlv_epi64(vec.lo, count);
+    __m256i lo_lt64 = _mm256_or_si256(lo_shifted, carry);
+    __m256i hi_lt64 = detail::sra_epi64_var(vec.hi, count);
+
+    __m256i lo_gt64 = detail::sra_epi_var(vec.hi, _mm256_sub_epi64(vec.hi, v64));
+
