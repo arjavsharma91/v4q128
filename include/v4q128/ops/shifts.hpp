@@ -103,16 +103,30 @@ template <int N>
 // variable shifts
 
 [[nodiscard]] V4Q128_INLINE v4q128 shl_var(v4q128 vec, __m256i count) noexcept {
-    const __m256i zero = _mm256_setzero_si256();
+    const __m256i v127 = _mm256_set1_epi64x(127);
     const __m256i v63 = _mm256_set1_epi64x(63);
     const __m256i v64 = _mm256_set1_epi64x(64);
 
-    __m256i cnt_mod64 = _mm256_and_si256(count, v63);
-    __m256i valid_carry = _mm256_cmpgt_epi64(cnt_mod64, zero);
+    __m256i lo_srl = _mm256_srli_epi64(vec.lo, 1);
+    __m256i sub64 = _mm256_sub_epi64(v63, count);
+    __m256i carry = _mm256_srli_epi64(lo_srl, sub64);
 
-    __m256i hi_shl = _mm256_sllv_epi64(vec.hi, count);
-    __m256i lo_carry = _mm256_srlv_epi64(cnt_mod64, zero);
-    lo_carry = _mm256_and_si256(lo_carry, valid_carry);
+    __m256i hi_shifted = _mm256i_sllv_epi64(vec.hi, count);
+    __m256i hi_lt64 = _mm256_or_si256(hi_shifted, carry);
+    __m256i lo_lt64 = _mm256_sllv_epi64(vec.lo, count);
+
+    __m256i hi_gt64 = _mm256_sllv_epi64(vec.lo, _mm256_sub_epi64(count, v64));
+
+    __m256i gt63 = _mm256_cmpgt_epi64(count, v63);
+    __m256i gt127 = _mm256_cmpgt_epi64(count, v127);
+
+    __m256i lo_final = _mm256_andnot_si256(gt63, lo_lt64);
+
+    __m256i hi_blend = _mm256_blendv_epi8(hi_lt64, hi_gt64, gt63);
+    __m256i final_hi = _mm256_andnot_si256(gt127, hi_blend);
+
+    return v4q128(final_lo, final_hi);
+}
 
     
     
