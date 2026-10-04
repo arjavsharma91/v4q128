@@ -152,10 +152,10 @@ template <int N>
 }
 
 [[nodiscard]] V4Q128_INLINE v4q128 sra_var(v4q128 vec, __m256i count) noexcept {
-    __m256i v63 = _mm256_set1_epi64x(63);
-    __m256i v64 = _mm256_set1_epi64x(64);
-    __m256i v127 = _mm256_set1_epi64x(127);
-    __m256i zero = _mm256_setzero_si256();
+    const __m256i v63 = _mm256_set1_epi64x(63);
+    const __m256i v64 = _mm256_set1_epi64x(64);
+    const __m256i v127 = _mm256_set1_epi64x(127);
+    const __m256i zero = _mm256_setzero_si256();
 
     __m256i sign_mask = _mm256_cmpgt_epi64(zero, vec.hi);
 
