@@ -105,9 +105,9 @@ template <int N>
 
     __m256i lo_srl = _mm256_srli_epi64(vec.lo, 1);
     __m256i sub64 = _mm256_sub_epi64(v63, count);
-    __m256i carry = _mm256_srli_epi64(lo_srl, sub64);
+    __m256i carry = _mm256_srlv_epi64(lo_srl, sub64);
 
-    __m256i hi_shifted = _mm256i_sllv_epi64(vec.hi, count);
+    __m256i hi_shifted = _mm256_sllv_epi64(vec.hi, count);
     __m256i hi_lt64 = _mm256_or_si256(hi_shifted, carry);
     __m256i lo_lt64 = _mm256_sllv_epi64(vec.lo, count);
 
@@ -121,7 +121,7 @@ template <int N>
     __m256i hi_blend = _mm256_blendv_epi8(hi_lt64, hi_gt64, gt63);
     __m256i final_hi = _mm256_andnot_si256(gt127, hi_blend);
 
-    return v4q128(final_lo, final_hi);
+    return v4q128(lo_final, final_hi);
 }
 
     
