@@ -6,7 +6,7 @@
 #if defined (_MSC_VER)
     #define V4Q128_INLINE __forceinline
 #elif defined (__GNUC__) || defined (__clang__)
-    #define V4Q128_INLINE __attribute__((always_inline))
+    #define V4Q128_INLINE inline __attribute__((always_inline))
 #else
     #define V4Q128_INLINE inline
 #endif
@@ -31,7 +31,7 @@ namespace detail {
         __m256i sign_mask = _mm256_cmpgt_epi64(zero, v);
         __m256i sign_sl1 = _mm256_slli_epi64(sign_mask, 1);
         __m256i sub63 = _mm256_sub_epi64(v63, count);
-        __m256i fill = _mm256_sllv_epi64(sign_sl1);
+        __m256i fill = _mm256_sllv_epi64(sign_sl1, sub63);
         return _mm256_or_si256(srl, fill);
     }
 }
