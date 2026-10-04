@@ -155,18 +155,19 @@ template <int N>
     __m256i v63 = _mm256_set1_epi64x(63);
     __m256i v64 = _mm256_set1_epi64x(64);
     __m256i v127 = _mm256_set1_epi64x(127);
+    __m256i zero = _mm256_setzero_si256();
 
     __m256i sign_mask = _mm256_cmpgt_epi64(zero, vec.hi);
 
     __m256i hi_shiftone = _mm256_slli_epi64(vec.hi, 1);
     __m256i sub64 = _mm256_sub_epi64(v63, count);
-    __m256i carry = _mm256_slli_epi64(hi_sl1, sub64);
+    __m256i carry = _mm256_slli_epi64(hi_shiftone, sub64);
     
     __m256i lo_shifted = _mm256_srlv_epi64(vec.lo, count);
     __m256i lo_lt64 = _mm256_or_si256(lo_shifted, carry);
     __m256i hi_lt64 = detail::sra_epi64_var(vec.hi, count);
 
-    __m256i lo_gt64 = detail::sra_epi_var(vec.hi, _mm256_sub_epi64(vec.hi, v64));
+    __m256i lo_gt64 = detail::sra_epi64_var(vec.hi, _mm256_sub_epi64(count, v64));
 
     __m256i gt63 = _mm256_cmpgt_epi64(count, v63);
     __m256i gt127 = _mm256_cmpgt_epi64(count, v127);
