@@ -171,10 +171,9 @@ template <int N>
     __m256i gt63 = _mm256_cmpgt_epi64(count, v63);
     __m256i gt127 = _mm256_cmpgt_epi64(count, v127);
 
-    __m256i final_hi = _mm256_andnot_si256(gt63, hi_lt64);
-
-    __m256i lo_blend = _mm256_blendv_epi64(lo_lt64, lo_gt64, gt63);
-    __m256i final_lo = _mm256_andnot_epi64(gt127, lo_blend);
+    __m256i lo_blend = _mm256_blendv_epi8(lo_lt64, lo_gt64, gt63);
+    __m256i final_lo = _mm256_blendv_epi8(lo_blend, sign_mask, gt127);
+    __m256i final_hi = _mm256_blendv_epi8(hi_lt64, sign_mask, gt63);
 
     return v4q128(final_lo, final_hi);
 }
