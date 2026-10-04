@@ -161,7 +161,7 @@ template <int N>
 
     __m256i hi_shiftone = _mm256_slli_epi64(vec.hi, 1);
     __m256i sub64 = _mm256_sub_epi64(v63, count);
-    __m256i carry = _mm256_slli_epi64(hi_shiftone, sub64);
+    __m256i carry = _mm256_sllv_epi64(hi_shiftone, sub64);
     
     __m256i lo_shifted = _mm256_srlv_epi64(vec.lo, count);
     __m256i lo_lt64 = _mm256_or_si256(lo_shifted, carry);
