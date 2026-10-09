@@ -33,6 +33,20 @@ namespace v4q128 {
     return _mm256_or_si256(hi_gt, _mm256_and_si256(hi_eq, lo_gt));
 }
 
+[[nodiscard]] V4Q128_INLINE v4q128 max(v4q128 a, v4q128 b) noexcept {
+    __m256i a_b_gt = greater_than(a, b);
+    __m256i hi = _mm256_blendv_epi8(b.hi, a.hi, a_b_gt);
+    __m256i lo = _mm256_blendv_epi8(b.lo, a.lo, a_b_gt);
+    return v4q128(lo, hi);
+}
+
+[[nodiscard]] V4Q128_INLINE v4q128 min(v4q128 a, v4q128 b) noexcept {
+    __m256i a_b_gt = greater_than(a, b);
+    __m256i hi = _mm256_blendv_epi8(a.hi, b.hi, a_b_gt);
+    __m256i lo = _mm256_blendv_epi8(a.lo, b.lo, a_b_gt);
+    return v4q128(lo, hi);
+}
+
 [[nodiscard]] V4Q128_INLINE __m256i less_than(v4q128 a, v4q128 b) noexcept {
     return greater_than(b, a);
 }
