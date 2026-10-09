@@ -60,7 +60,7 @@ namespace detail {
 
 [[nodiscard]] V4Q128_INLINE v4q128 abs(v4q128 v) noexcept {
     __m256i sign_mask = _mm256_cmpgt_epi64(_mm256_setzero_si256(), v.hi);
-    __m256i v_neg = neg(v);
+    v4q128 v_neg = neg(v);
     __m256i lo = _mm256_blendv_epi8(v.lo, v_neg.lo, sign_mask);
     __m256i hi = _mm256_blendv_epi8(v.hi, v_neg.hi, sign_mask);
     return v4q128(lo, hi);
