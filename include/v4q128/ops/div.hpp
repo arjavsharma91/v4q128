@@ -31,19 +31,19 @@ namespace v4q128 {
 
         switch (i) {
             case 0:
-                lo = static_case<uint64_t>(_mm256_extract_epi64(v.lo, 0));
+                lo = static_cast<uint64_t>(_mm256_extract_epi64(v.lo, 0));
                 hi = _mm256_extract_epi64(v.hi, 0);
                 break;
             case 1:
-                lo = static_case<uint64_t>(_mm256_extract_epi64(v.lo, 1));
+                lo = static_cast<uint64_t>(_mm256_extract_epi64(v.lo, 1));
                 hi = _mm256_extract_epi64(v.hi, 1);
                 break;
             case 2:
-                lo = static_case<uint64_t>(_mm256_extract_epi64(v.lo, 2));
+                lo = static_cast<uint64_t>(_mm256_extract_epi64(v.lo, 2));
                 hi = _mm256_extract_epi64(v.hi, 2);
                 break;
             case 3:
-                lo = static_case<uint64_t>(_mm256_extract_epi64(v.lo, 3));
+                lo = static_cast<uint64_t>(_mm256_extract_epi64(v.lo, 3));
                 hi = _mm256_extract_epi64(v.hi, 3);
                 break;
             default: break;
@@ -61,23 +61,23 @@ namespace v4q128 {
     int128_t vb3 = extract_lane(b, 3);
 
     auto compute_div = [](int128_t va, int128_t vb) -> int128_t {
-        bool neg = (va << 127) ^ (vb << 127);
+        bool neg = (va >> 127) ^ (vb >> 127);
         uint128_t ua = va < 0 ? static_cast<uint128_t>(-va) : static_cast<uint128_t>(va);
         uint128_t ub = vb < 0 ? static_cast<uint128_t>(-vb) : static_cast<uint128_t>(vb);
 
         uint128_t udiv = (ua << 64) / ub;
 
-        return static_cast<int128_t>((udiv^res_mask) - res_mask);
+        return static_cast<int128_t>((udiv^neg) - neg);
     };
 
     int128_t res0 = compute_div(va0, vb0);
     int128_t res1 = compute_div(va1, vb1);
     int128_t res2 = compute_div(va2, vb2);
-    int128_t res3 = compute_div(va3, vb2);
+    int128_t res3 = compute_div(va3, vb3);
 
     return v4q128(
-        _mm256_set1_epi64x(static_cast<int64_t>(res3), static_cast<int64_t>(res2), static_cast<int64_t>(res1), static_cast<int64_t>(res0)),
-        _mm256_set1_epi64x(static_cast<int64_t>(res3 >> 64), static_cast<int64_t>(res2 >> 64), static_cast<int64_t>(res1 >> 64), static_cast<int64_t>(res0 >> 64))
+        _mm256_set_epi64x(static_cast<int64_t>(res3), static_cast<int64_t>(res2), static_cast<int64_t>(res1), static_cast<int64_t>(res0)),
+        _mm256_set_epi64x(static_cast<int64_t>(res3 >> 64), static_cast<int64_t>(res2 >> 64), static_cast<int64_t>(res1 >> 64), static_cast<int64_t>(res0 >> 64))
         );
 }
 } // namespace
