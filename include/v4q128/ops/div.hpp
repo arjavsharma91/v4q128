@@ -32,3 +32,30 @@ namespace v4q128 {
         switch (i) {
             case 0:
                 lo = static_case<uint64_t>(_mm256_extract_epi64(v.lo, 0));
+                hi = _mm256_extract_epi64(v.hi, 0);
+                break;
+            case 1:
+                lo = static_case<uint64_t>(_mm256_extract_epi64(v.lo, 1));
+                hi = _mm256_extract_epi64(v.hi, 1);
+                break;
+            case 2:
+                lo = static_case<uint64_t>(_mm256_extract_epi64(v.lo, 2));
+                hi = _mm256_extract_epi64(v.hi, 2);
+                break;
+            case 3:
+                lo = static_case<uint64_t>(_mm256_extract_epi64(v.lo, 3));
+                hi = _mm256_extract_epi64(v.hi, 3);
+                break;
+            default: break;
+        }
+        return (static_cast<int128_t>(hi) << 64) | lo;
+    };
+
+    int128_t va0 = extract_lane(a, 0);
+    int128_t va1 = extract_lane(a, 1);
+    int128_t va2 = extract_lane(a, 2);
+    int128_t va3 = extract_lane(a, 3);
+    int128_t vb0 = extract_lane(b, 0);
+    int128_t vb1 = extract_lane(b, 1);
+    int128_t vb2 = extract_lane(b, 2);
+    int128_t vb3 = extract_lane(b, 3);
