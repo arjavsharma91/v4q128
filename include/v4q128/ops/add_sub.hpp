@@ -66,7 +66,7 @@ namespace detail {
     return v4q128(lo, hi);
 }
 
-[[nodiscard]] V4Q128_INLINE v4q128 sign(v4q128 v) noexcept {
+[[nodiscard]] V4Q128_INLINE __m256i sign(v4q128 v) noexcept {
     __m256i sign = _mm256_cmpgt_epi64(_mm256_setzero_si256(), a.hi);
     return sign;
 }
