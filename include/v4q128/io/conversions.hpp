@@ -25,7 +25,7 @@ namespace detail {
     __m256d hi_final = _mm256_cvtepi64_pd(v.hi);
 
     __m256d lo_flipped = _mm256_xor_si256(v.lo, detail::sign_bit_mask());
-    __m256d lo_converted = _mm256_cvepi64_pd(lo_flipped);
+    __m256d lo_converted = _mm256_cvtepi64_pd(lo_flipped);
     __m256d lo_final = _mm256_add_pd(lo_converted, uint64_bias);
 
     return _mm256_fmadd_pd(lo_final, scale_lo, hi_final);
