@@ -12,12 +12,6 @@
 
 namespace v4q128 {
 
-namespace detail {
-    [[nodiscard]] V4Q128_INLINE static __m256i sign_bit_mask() noexcept {
-        return _mm256_set1_epi64x(static_cast<long long>(0x8000000000000000ULL));
-    }
-}
-
 [[nodiscard]] V4Q128_INLINE __m256d to_double(v4q128 v) noexcept {
     const __m256d scale_lo = _mm256_set1_pd(5.4210108624275221700372640043497e-20);
     const __m256d uint64_bias = _mm256_set1_pd(18446744073709551616.0);
