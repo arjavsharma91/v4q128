@@ -5,8 +5,11 @@
 
 // Memory load, store, and transpose routines
 #include <v4q128/io/transpose.hpp>
+#include <v4q128/io/conversions.hpp>
 
 // Addition and subtraction
 #include <v4q128/ops/add_sub.hpp>
 #include <v4q128/ops/cmp.hpp>
 #include <v4q128/ops/mul.hpp>
+#include <v4q128/ops/div.hpp>
+#include <v4q128/ops/shifts.hpp>
