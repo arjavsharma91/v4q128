@@ -31,9 +31,11 @@ namespace v4q128 {
     __m256d hi_dbl = _mm256_floor_pd(vec);
     __m256i hi_final = _mm256_cvtpd_epi64(hi_dbl);
 
-    __m256d fraction = _mm256_sub_pd(hi_dbl, hi_final);
+    __m256d fraction = _mm256_sub_pd(vec, hi_dbl);
     __m256d scaled = _mm256_mul_pd(fraction, scale_hi);
-    __m256i lo_final = _mm256_cvtpd_epi64(scaled);
+    __m256d scaled_biased = _mm256_sub_pd(scaled, scale_hi);
+    __m256i lo_conv = _mm256_cvtpd_epi64(scaled_biased);
+    __m256i lo_final = _mm256_xor_si256(lo_conv, detail::sign_bit_mask());
 
     return v4q128(lo_final, hi_final);
 }
