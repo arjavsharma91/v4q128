@@ -61,7 +61,7 @@ namespace v4q128 {
     int128_t vb3 = extract_lane(b, 3);
 
     auto compute_div = [](int128_t va, int128_t vb) -> int128_t {
-        bool neg = (va >> 127) ^ (vb >> 127);
+        int128_t neg = (va >> 127) ^ (vb >> 127);
         uint128_t ua = va < 0 ? static_cast<uint128_t>(-va) : static_cast<uint128_t>(va);
         uint128_t ub = vb < 0 ? static_cast<uint128_t>(-vb) : static_cast<uint128_t>(vb);
 
