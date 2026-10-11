@@ -12,12 +12,6 @@
 
 namespace v4q128 {
 
-namespace detail {
-    [[nodiscard]] V4Q128_INLINE static __m256i sign_bit_mask() noexcept {
-        return _mm256_set1_epi64x(static_cast<long long>(0x8000000000000000ULL));
-    }
-}
-
 [[nodiscard]] V4Q128_INLINE v4q128 add(v4q128 a, v4q128 b) noexcept {
     __m256i lo_sum = _mm256_add_epi64(a.lo, b.lo);
 
