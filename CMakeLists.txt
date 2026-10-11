@@ -18,7 +18,7 @@ set(V4Q128_HEADERS
     include/v4q128/ops/mul.hpp
     include/v4q128/ops/div.hpp
     include/v4q128/ops/shifts.hpp
-    include/v4q128/ops/conversions.hpp
+    include/v4q128/io/conversions.hpp
 )
 
 # Header-only library target
