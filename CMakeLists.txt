@@ -16,6 +16,9 @@ set(V4Q128_HEADERS
     include/v4q128/ops/add_sub.hpp
     include/v4q128/ops/cmp.hpp
     include/v4q128/ops/mul.hpp
+    include/v4q128/ops/div.hpp
+    include/v4q128/ops/shifts.hpp
+    include/v4q128/ops/conversions.hpp
 )
 
 # Header-only library target
@@ -38,9 +41,17 @@ target_link_libraries(sandbox PRIVATE v4q128)
 if(V4Q128_BUILD_TESTS)
     enable_testing()
 
+    # Multiplication test suite
     add_executable(test_mul tests/test_mul.cpp ${V4Q128_HEADERS})
     target_link_libraries(test_mul PRIVATE v4q128)
 
     add_test(NAME Mul_Deterministic COMMAND test_mul --deterministic)
     add_test(NAME Mul_RandomStress  COMMAND test_mul --random)
+
+    # Division test suite
+    add_executable(test_div tests/test_div.cpp ${V4Q128_HEADERS})
+    target_link_libraries(test_div PRIVATE v4q128)
+
+    add_test(NAME Div_Deterministic COMMAND test_div --deterministic)
+    add_test(NAME Div_RandomStress  COMMAND test_div --random)
 endif()
