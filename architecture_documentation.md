@@ -42,3 +42,10 @@ Multiplication and register allocation are optimized to maximize throughput and 
 * **Deliberate Register Spilling:** The register allocator intentionally permits spilling during complex multiplication routines.
 
 * **Store-to-Load Forwarding Trade-Off:** Rather than stalling execution on a serial carry chain dependency, spilled data resides in the L1 store buffer. This enables store-to-load forwarding at a cost of only 5 to 7 cycles, trading minor spill overhead for high Instruction-Level Parallelism (ILP).
+
+## 5. Division Strategy
+
+AVX2 fixed-point division is inefficient because x86 vector registers lack native 128-bit or 64-bit integer division instructions. To bypass this hardware limitation, the library implements a dual-path division approach:
+
+* **`div_approx` (Approximate Path):** Converts 128-bit fixed-point values into double-precision floating-point vectors (`__m256d`), performs hardware floating-point division using AVX2 units, and converts back. This trades away bit-exact accuracy for significant speed gains.
+* **`div_exact` (Exact Path):** Extracts lanes and uses a branchless 128-bit scalar implementation (`__int128`) to perform exact integer division, guaranteeing bit-exact accuracy without rounding drift.
