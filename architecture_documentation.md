@@ -60,3 +60,16 @@ Comparison primitives return either a full bitmask (`0xFFFFFFFFFFFFFFFF`) or zer
   2. Applies the sign-bit mask (MSB flip) to the lower fractional limbs (`lo`) to ensure correct signed comparison.
   3. Combines results using a bitwise `OR`: true if `hi > hi_b`, or if `hi == hi_b` and the adjusted `lo > lo_b`.
 * **Other Comparisons (`<`, `<=`, `>=`, `!=`):** Implemented as logical inversions and combinations of the base `==` and `>` operations.
+
+## 7. Shift Operations (`shl`, `shr`, `sra`)
+
+Shift operations are split into compile-time constant shifts (`_imm`) using `constexpr` template branching and runtime variable shifts (`_var`) using AVX2 vector shift instructions. 
+
+* **Compile-Time Constant Shifts (`_imm`):** 
+  * Branching is evaluated at compile time based on the shift count $N$.
+  * For shifts under 64 bits ($N < 64$), bits crossing the 64-bit limb boundary are isolated via opposite shifts and combined into a carry limb using a bitwise `OR`.
+  * For shifts between 64 and 127 bits ($64 \le N < 128$), the limbs are remapped directly (e.g., shifting `lo` into `hi` and zeroing out the lower limb).
+  * For shifts of 128 bits or greater, the result is zeroed (or filled with the sign bit for arithmetic right shifts).
+* **Variable Shifts (`_var`):**
+  * Uses AVX2 variable shift primitives (`_mm256_sllv_epi64`, `_mm256_srlv_epi64`) combined with comparison masks (`gt63`, `gt127`) and blending logic (`_mm256_blendv_epi8`, `_mm256_andnot_si256`) to branchlessly select the correct limb permutation depending on whether the dynamic shift count is below 64, between 64 and 127, or greater than 127.
+* **Arithmetic Right Shift (`sra`):** Preserves the two's complement sign by isolating the sign bit of the upper limb (`vec.hi`) and filling upper or lower limbs via sign extension when shift counts exceed limb boundaries.
