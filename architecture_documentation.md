@@ -49,3 +49,14 @@ AVX2 fixed-point division is inefficient because x86 vector registers lack nativ
 
 * **`div_approx` (Approximate Path):** Converts 128-bit fixed-point values into double-precision floating-point vectors (`__m256d`), performs hardware floating-point division using AVX2 units, and converts back. This trades away bit-exact accuracy for significant speed gains.
 * **`div_exact` (Exact Path):** Extracts lanes and uses a branchless 128-bit scalar implementation (`__int128`) to perform exact integer division, guaranteeing bit-exact accuracy without rounding drift.
+
+## 6. Comparison Operations
+
+Comparison primitives return either a full bitmask (`0xFFFFFFFFFFFFFFFF`) or zero (`0`) across AVX2 lanes. All comparison operators are built as logical extensions of equality and greater-than:
+
+* **Equality (`==`):** Compares both `lo` and `hi` limbs independently for equality, then combines the results using a bitwise `AND` instruction (`_mm256_and_si256`).
+* **Greater Than (`>`):** Implemented hierarchically:
+  1. Checks if the upper integer limb (`hi`) is strictly greater.
+  2. Applies the sign-bit mask (MSB flip) to the lower fractional limbs (`lo`) to ensure correct signed comparison.
+  3. Combines results using a bitwise `OR`: true if `hi > hi_b`, or if `hi == hi_b` and the adjusted `lo > lo_b`.
+* **Other Comparisons (`<`, `<=`, `>=`, `!=`):** Implemented as logical inversions and combinations of the base `==` and `>` operations.
