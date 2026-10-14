@@ -60,8 +60,8 @@ namespace v4q128 {
 }
 
 [[nodiscard]] V4Q128_INLINE v4q128 from_64vec(__m256i vec) noexcept {
-    lo = _mm256_setzero_si256();
-    return v4q128(lo, val);
+    __m256i lo = _mm256_setzero_si256();
+    return v4q128(lo, vec);
 }
 
 [[nodiscard]] V4Q128_INLINE __m256i to_64i(v4q128 v) noexcept {
