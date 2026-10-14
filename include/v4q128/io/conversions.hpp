@@ -47,9 +47,8 @@ namespace v4q128 {
     return v4q128(lo, hi);
 }
 
-[[nodiscard]] V4Q128_INLINE v4q128 from_16i(int16_t i) noexcept {
-    int64_t converted = static_cast<int64_t>(i);
-    __m256i hi = _mm256_set1_epi64x(converted);
+[[nodiscard]] V4Q128_INLINE v4q128 from_64u(uint64_t uint) noexcept {
+    __m256i hi = _mm256_set1_epi64x(static_cast<int64_t>(uint);
     __m256i lo = _mm256_setzero_si256();
     return v4q128(lo, hi);
 }
