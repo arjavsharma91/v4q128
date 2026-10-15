@@ -72,7 +72,7 @@ namespace v4q128 {
     return vec.hi;
 }
 
-[[nodiscard]] V4Q128_INLINE v4q128 from_32i_vec(__m256i vec) noexcept {
+[[nodiscard]] V4Q128_INLINE v4q128 from_32i_vec(__m128i vec) noexcept {
     __m256i hi = _mm256_cvtepi32_epi64(vec);
     __m256i lo = _mm256_setzero_si256();
     return v4q128(lo, hi);
