@@ -68,7 +68,7 @@ namespace v4q128 {
     return v.hi;
 }
 
-[[nodiscard]] V4Q128_INLINE v4q128 to_64u(v4q128 vec) noexcept {
+[[nodiscard]] V4Q128_INLINE __m256i to_64u(v4q128 vec) noexcept {
     return vec.hi;
 }
 
