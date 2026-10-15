@@ -88,14 +88,14 @@ namespace v4q128 {
     return from_float_vec(v_float);
 }
 
-[[nodiscard]] V4Q128_INLINE float to_float(v4q128 vec) noexcept {
-    __m128 v_float = to_float_vec(vec);
-    return _mm_cvtss_f32(v_float);
-}
-
 [[nodiscard]] V4Q128_INLINE __m128 to_float_vec(v4q128 vec) noexcept {
     __m256d v_double = to_double(vec);
     return _mm256_cvtpd_ps(v_double);
+}
+
+[[nodiscard]] V4Q128_INLINE float to_float(v4q128 vec) noexcept {
+    __m128 v_float = to_float_vec(vec);
+    return _mm_cvtss_f32(v_float);
 }
 
 } // namespace
