@@ -6,9 +6,9 @@ An experimental, failed 4-lane AVX2 SIMD Q64.64 fixed-point library. Archived af
 
 | Operation | AVX2 SIMD vs. Scalar | Result |
 | :--- | :--- | :--- |
-| **Addition / Subtraction** | Slower | Compiler auto-vectorization and scalar loops win due to register pressure. |
-| **Multiplication** | 1.3x speedup | Insufficient gain to justify dual-limb SoA complexity. |
-| **Variable Shifts (`shl`, `sra`)** | Equivalent | High complexity for zero net gain. |
+| **Addition / Subtraction** | 0.95x | Compiler auto-vectorization and scalar loops win due to register pressure. |
+| **Multiplication** | 1.3x | Insufficient gain to justify dual-limb SoA complexity. |
+| **Variable Shifts (`shl`, `sra`)** | Approximately 1.0x | High complexity for zero net gain. |
 
 ## Why It Failed
 
