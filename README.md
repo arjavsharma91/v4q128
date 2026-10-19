@@ -18,4 +18,5 @@ An experimental, failed 4-lane AVX2 SIMD Q64.64 fixed-point library. Archived af
 ## Salvageable Components
 
 * **128-Bit Variable Shift Engine:** Standalone branchless carry-handling (`shl_var`, `srl_var`, `sra_var`).
+* **Custom Implementations:** Custom implementations of arithmetic right shifts missing in the AVX2 instruction set
 * **Float/Double Conversion Pipeline:** High-precision scaling logic utilizing `2^64` bias factors and unsigned sign-bit manipulation.
